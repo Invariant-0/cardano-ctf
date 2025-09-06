@@ -1,4 +1,4 @@
-import { Data, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data, LucidEvolution } from '@lucid-evolution/lucid';
 import {
   awaitTxConfirms,
   getCurrentTime,
@@ -6,13 +6,10 @@ import {
   hour,
   minute,
   sleep,
-} from "../../common/offchain/utils.ts";
-import { GameData, TestData } from "./task.ts";
+} from '../../common/offchain/utils';
+import { GameData, TestData } from './task';
 
-export async function play(
-  lucid: Lucid,
-  gameData: GameData,
-): Promise<TestData> {
+export async function play(lucid: LucidEvolution, gameData: GameData): Promise<TestData> {
   /**
    * The smart contracts are already deployed, see the [run.ts] file for more details.
    * The [gameData] variable contains all the things you need to interact with the vulnerable smart contracts.
@@ -27,30 +24,29 @@ export async function play(
 
   let currentTime = getCurrentTime(lucid);
   const remainingTime = gameData.lockUntil - currentTime;
-  const offset = 5 * minute();
 
   console.log(
-    `Vesting will be unlocked in ${
-      Math.floor(remainingTime / hour())
-    } hours and ${Math.floor((remainingTime % hour()) / minute())} minutes.
-    waiting till the end of the vesting...`,
+    `Vesting will be unlocked in ${Math.floor(
+      remainingTime / hour()
+    )} hours and ${Math.floor((remainingTime % hour()) / minute())} minutes.
+    waiting till the end of the vesting...`
   );
 
-  await sleep(BigInt(remainingTime + 2 * offset));
+  await sleep(BigInt(remainingTime + 2 * minute()));
 
-  const ownAddress = await lucid.wallet.address();
+  const ownAddress = await lucid.wallet().address();
   currentTime = getCurrentTime(lucid);
 
   const tx = await lucid
     .newTx()
     .collectFrom([gameData.vestingtUtxo], Data.void())
-    .attachSpendingValidator(gameData.vestingValidator)
+    .attach.SpendingValidator(gameData.vestingValidator)
     .addSigner(ownAddress)
-    .validFrom(currentTime - offset)
-    .validTo(currentTime + offset)
+    .validFrom(currentTime)
+    .validTo(currentTime + 5 * minute())
     .complete();
 
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx.sign.withWallet().complete();
 
   const txHash = await signedTx.submit();
   await awaitTxConfirms(lucid, txHash);

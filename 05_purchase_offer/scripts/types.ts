@@ -1,9 +1,6 @@
-import { Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data } from '@lucid-evolution/lucid';
 
-import {
-  AddressSchema,
-  getAddressFromBech32,
-} from "../../common/offchain/types.ts";
+import { AddressSchema, getAddressFromBech32 } from '../../common/offchain/types';
 
 const AssetClassSchema = Data.Object({
   policy_id: Data.Bytes(),
@@ -17,8 +14,7 @@ const PurchaseOfferDatumSchema = Data.Object({
 });
 
 type PurchaseOfferDatum = Data.Static<typeof PurchaseOfferDatumSchema>;
-export const PurchaseOfferDatum =
-  PurchaseOfferDatumSchema as unknown as PurchaseOfferDatum;
+export const PurchaseOfferDatum = PurchaseOfferDatumSchema as unknown as PurchaseOfferDatum;
 
 const SellRedeemerSchema = Data.Object({
   sold_asset: AssetClassSchema,
@@ -30,8 +26,8 @@ export const SellRedeemer = SellRedeemerSchema as unknown as SellRedeemer;
 export function createPurchaseOfferDatumSchema(
   addressBech32: string,
   desiredPolicyId: string,
-  desiredAssetName: string | null, // null for any asset name
-): string | undefined {
+  desiredAssetName: string | null // null for any asset name
+): string {
   const owner = getAddressFromBech32(addressBech32);
 
   const datum: PurchaseOfferDatum = {

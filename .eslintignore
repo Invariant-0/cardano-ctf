@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+plutus.json
+
+# Lock files
+*.lock
+
+# Generated files
+*.d.ts
+
+# Temporary files
+*.log
+tmp/
+temp/
+
+# Videos and binary files
+videos/
+images/
+closeout/*.pdf
+
+# Aiken files (formatted by aiken)
+*.ak

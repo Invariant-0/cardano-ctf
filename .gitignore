@@ -5,6 +5,8 @@ common/offchain/config.ts
 **/scripts/solution.ts
 **/scripts/solutions/
 
+node_modules/
+
 # Aiken
 **/artifacts/
 **/build/

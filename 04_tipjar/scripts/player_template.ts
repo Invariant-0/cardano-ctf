@@ -1,15 +1,9 @@
-import { Data, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
-import {
-  awaitTxConfirms,
-  getFormattedTxDetails,
-} from "../../common/offchain/utils.ts";
-import { createTipJarDatum, TipJarDatum, TipJarRedeemer } from "./types.ts";
-import { GameData, TestData } from "./task.ts";
+import { Data, LucidEvolution } from '@lucid-evolution/lucid';
+import { awaitTxConfirms, getFormattedTxDetails } from '../../common/offchain/utils';
+import { createTipJarDatum, TipJarDatum, TipJarRedeemer } from './types';
+import { GameData, TestData } from './task';
 
-export async function play(
-  lucid: Lucid,
-  gameData: GameData,
-): Promise<TestData> {
+export async function play(lucid: LucidEvolution, gameData: GameData): Promise<TestData> {
   /**
    * The smart contracts are already deployed, see the [run.ts] file for more details.
    * The [gameData] variable contains all the things you need to interact with the vulnerable smart contracts.
@@ -18,21 +12,21 @@ export async function play(
   const validator = gameData.scriptValidator;
   const utxo = gameData.scriptUtxo;
   const contract = gameData.scriptAddress;
-  const lovelaceInUTxO = gameData.scriptUtxo.assets["lovelace"];
+  const lovelaceInUTxO = gameData.scriptUtxo.assets['lovelace'];
 
-  if (utxo.datum == null) {
-    throw new Error("UTxO object does not contain datum.");
+  if (utxo.datum === null) {
+    throw new Error('UTxO object does not contain datum.');
   }
 
-  const datum = Data.from(utxo.datum, TipJarDatum);
+  const datum = Data.from(utxo.datum!, TipJarDatum);
 
   // ================ YOUR CODE STARTS HERE
 
-  console.log("\The TipJar was created.");
+  console.log('\nThe TipJar was created.');
 
   console.log(`\nThe UTxO has following atributes`);
   console.log(utxo);
-  console.log(`\nIt's datum is following`);
+  console.log(`\nIts datum is the following`);
   console.log(datum);
 
   /**
@@ -42,21 +36,19 @@ export async function play(
 
   const tx = await lucid
     .newTx()
-    .collectFrom([utxo], Data.to("AddTip", TipJarRedeemer))
-    .payToContract(contract, {
-      inline: createTipJarDatum(datum.owner, ["Thank you!"]),
-    }, { lovelace: lovelaceInUTxO + 10000000n })
-    .attachSpendingValidator(validator)
+    .collectFrom([utxo], Data.to('AddTip', TipJarRedeemer))
+    .pay.ToContract(
+      contract,
+      { kind: 'inline', value: createTipJarDatum(datum.owner, ['Thank you!']) },
+      { lovelace: lovelaceInUTxO + 10000000n }
+    )
+    .attach.SpendingValidator(validator)
     .complete();
 
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx.sign.withWallet().complete();
   const tippingTxHash = await signedTx.submit();
 
-  console.log(
-    `AddTip transaction submitted${
-      getFormattedTxDetails(tippingTxHash, lucid)
-    }`,
-  );
+  console.log(`AddTip transaction submitted${getFormattedTxDetails(tippingTxHash, lucid)}`);
 
   await awaitTxConfirms(lucid, tippingTxHash);
   /**

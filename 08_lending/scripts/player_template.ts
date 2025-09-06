@@ -1,5 +1,5 @@
-import { Data, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
-import { createLendingDatum, LendingDatum, LendingRedeemer } from "./types.ts";
+import { Data, LucidEvolution } from '@lucid-evolution/lucid';
+import { createLendingDatum, LendingDatum, LendingRedeemer } from './types';
 import {
   awaitTxConfirms,
   filterUTXOsByTxHash,
@@ -7,13 +7,10 @@ import {
   getCurrentTime,
   getFormattedTxDetails,
   minute,
-} from "../../common/offchain/utils.ts";
-import { askForRepayment, GameData, TestData } from "./task.ts";
+} from '../../common/offchain/utils';
+import { askForRepayment, GameData, TestData } from './task';
 
-export async function play(
-  lucid: Lucid,
-  gameData: GameData,
-): Promise<TestData> {
+export async function play(lucid: LucidEvolution, gameData: GameData): Promise<TestData> {
   /**
    * The smart contracts are already deployed, see the [run.ts] file for more details.
    *
@@ -38,76 +35,70 @@ export async function play(
    * 3. Claim the repaid ADA earning the interest in the process.
    */
 
-  const ownAddress = await lucid.wallet.address();
+  const ownAddress = await lucid.wallet().address();
 
   const borrowerWallet = gameData.wallets[0];
   const lendUTxO = borrowerWallet.lendingUTxOs[0];
-  if (lendUTxO == null || lendUTxO.datum == null) {
-    throw new Error("UTxO object does not exists or does not contain datum.");
+  if (lendUTxO?.datum === null) {
+    throw new Error('UTxO object does not exists or does not contain datum.');
   }
-  const lendDatum = Data.from(lendUTxO.datum, LendingDatum);
+  const lendDatum = Data.from(lendUTxO.datum!, LendingDatum);
   const validationRangeTo = getCurrentTime(lucid) + 10 * minute();
 
   const lendTx = await lucid
     .newTx()
-    .attachSpendingValidator(gameData.validators.lendingValidator)
+    .attach.SpendingValidator(gameData.validators.lendingValidator)
     .validTo(validationRangeTo)
-    .collectFrom([lendUTxO], Data.to("Lend", LendingRedeemer))
-    .payToContract(gameData.validators.lendingAddress, {
-      inline: createLendingDatum(
-        borrowerWallet.address,
-        ownAddress,
-        lendDatum.borrowed_amount,
-        lendDatum.interest,
-        lendDatum.loan_duration,
-        BigInt(validationRangeTo) + lendDatum.loan_duration,
-        lendDatum.collateral.policy_id,
-        lendDatum.collateral.asset_name,
-        false,
-        lendDatum.unique_id,
-      ),
-    }, { [borrowerWallet.collateralAsset]: 1n, lovelace: FIXED_MIN_ADA })
-    .payToAddress(borrowerWallet.address, {
+    .collectFrom([lendUTxO], Data.to('Lend', LendingRedeemer))
+    .pay.ToContract(
+      gameData.validators.lendingAddress,
+      {
+        kind: 'inline',
+        value: createLendingDatum(
+          borrowerWallet.address,
+          ownAddress,
+          lendDatum.borrowed_amount,
+          lendDatum.interest,
+          lendDatum.loan_duration,
+          BigInt(validationRangeTo) + lendDatum.loan_duration,
+          lendDatum.collateral.policy_id,
+          lendDatum.collateral.asset_name,
+          false,
+          lendDatum.unique_id
+        ),
+      },
+      { [borrowerWallet.collateralAsset]: 1n, lovelace: FIXED_MIN_ADA }
+    )
+    .pay.ToAddress(borrowerWallet.address, {
       lovelace: lendDatum.borrowed_amount,
     })
     .complete();
 
-  const signedTx = await lendTx
-    .sign()
-    .complete();
+  const signedTx = await lendTx.sign.withWallet().complete();
 
   const lendTxHash = await signedTx.submit();
 
-  console.log(
-    `ADA was successfully lent${getFormattedTxDetails(lendTxHash, lucid)}`,
-  );
+  console.log(`ADA was successfully lent${getFormattedTxDetails(lendTxHash, lucid)}`);
 
   await awaitTxConfirms(lucid, lendTxHash);
 
   const UTxOsForRepayment = filterUTXOsByTxHash(
-    await lucid.utxosAt(gameData.validators!.lendingAddress),
-    lendTxHash,
+    await lucid.utxosAt(gameData.validators.lendingAddress),
+    lendTxHash
   );
 
-  const repaidUTxOs = await askForRepayment(
-    lucid,
-    gameData,
-    borrowerWallet,
-    UTxOsForRepayment,
-  );
+  const repaidUTxOs = await askForRepayment(lucid, gameData, borrowerWallet, UTxOsForRepayment);
 
   const claimTx = await lucid
     .newTx()
-    .attachSpendingValidator(gameData.validators.lendingValidator)
-    .collectFrom(repaidUTxOs, Data.to("ClaimRepayment", LendingRedeemer))
+    .attach.SpendingValidator(gameData.validators.lendingValidator)
+    .collectFrom(repaidUTxOs, Data.to('ClaimRepayment', LendingRedeemer))
     .addSigner(ownAddress)
     .complete();
-  const signedCTx = await claimTx.sign().complete();
+  const signedCTx = await claimTx.sign.withWallet().complete();
   const claimTxHash = await signedCTx.submit();
 
-  console.log(
-    `Claiming the repayments${getFormattedTxDetails(claimTxHash, lucid)}`,
-  );
+  console.log(`Claiming the repayments${getFormattedTxDetails(claimTxHash, lucid)}`);
 
   await awaitTxConfirms(lucid, claimTxHash);
 

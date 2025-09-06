@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+plutus.json
+
+# Lock files
+yarn.lock
+package-lock.json
+aiken.lock
+
+# Generated files
+*.d.ts
+
+# Other
+.git/
+coverage/
+*.log
+*.min.js
+*.min.css
+
+# Closeout PDFs
+closeout/*.pdf
+
+# Videos
+videos/*.mp4
+
+# Aiken files (formatted by aiken)
+*.ak

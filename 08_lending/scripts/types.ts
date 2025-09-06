@@ -1,9 +1,6 @@
-import { Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data } from '@lucid-evolution/lucid';
 
-import {
-  AddressSchema,
-  getAddressFromBech32,
-} from "../../common/offchain/types.ts";
+import { AddressSchema, getAddressFromBech32 } from '../../common/offchain/types';
 
 const AssetClassSchema = Data.Object({
   policy_id: Data.Bytes(),
@@ -38,12 +35,10 @@ export function createLendingDatum(
   collateralPolicy: string,
   collateralName: string,
   repaid: boolean,
-  uniqueId: bigint,
+  uniqueId: bigint
 ): string {
   const borrower = getAddressFromBech32(borrowerBech32);
-  const lender = lenderBech32 != null
-    ? getAddressFromBech32(lenderBech32)
-    : null;
+  const lender = lenderBech32 !== null ? getAddressFromBech32(lenderBech32) : null;
 
   const collateral: AssetClass = {
     policy_id: collateralPolicy,
@@ -66,12 +61,11 @@ export function createLendingDatum(
 }
 
 const LendingRedeemerSchema = Data.Enum([
-  Data.Literal("Lend"),
-  Data.Literal("Repay"),
-  Data.Literal("ClaimRepayment"),
-  Data.Literal("ClaimCollateral"),
+  Data.Literal('Lend'),
+  Data.Literal('Repay'),
+  Data.Literal('ClaimRepayment'),
+  Data.Literal('ClaimCollateral'),
 ]);
 
 type LendingRedeemer = Data.Static<typeof LendingRedeemerSchema>;
-export const LendingRedeemer =
-  LendingRedeemerSchema as unknown as LendingRedeemer;
+export const LendingRedeemer = LendingRedeemerSchema as unknown as LendingRedeemer;

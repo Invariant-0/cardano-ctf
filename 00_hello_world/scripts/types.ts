@@ -1,4 +1,4 @@
-import { Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data } from '@lucid-evolution/lucid';
 
 const HelloRedeemerSchema = Data.Object({
   msg: Data.Bytes(),

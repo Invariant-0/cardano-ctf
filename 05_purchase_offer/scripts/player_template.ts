@@ -1,18 +1,11 @@
-import { Data, fromText, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
-import {
-  awaitTxConfirms,
-  FIXED_MIN_ADA,
-  getFormattedTxDetails,
-} from "../../common/offchain/utils.ts";
-import { PurchaseOfferDatum, SellRedeemer } from "./types.ts";
-import { getBech32FromAddress } from "../../common/offchain/types.ts";
+import { Data, fromText, LucidEvolution } from '@lucid-evolution/lucid';
+import { awaitTxConfirms, FIXED_MIN_ADA, getFormattedTxDetails } from '../../common/offchain/utils';
+import { PurchaseOfferDatum, SellRedeemer } from './types';
+import { getBech32FromAddress } from '../../common/offchain/types';
 
-import { GameData, TestData } from "./task.ts";
+import { GameData, TestData } from './task';
 
-export async function play(
-  lucid: Lucid,
-  gameData: GameData,
-): Promise<TestData> {
+export async function play(lucid: LucidEvolution, gameData: GameData): Promise<TestData> {
   /**
    * The smart contracts are already deployed, see the [run.ts] file for more details.
    * The [gameData] variable contains all the things you need to interact with the vulnerable smart contracts.
@@ -31,38 +24,38 @@ export async function play(
   const asset = `${gameData.assetPolicyId}${fromText(gameData.assetTokenName)}`;
   const offerUtxo = gameData.scriptUtxos.find((utxo) => {
     const datum = Data.from(utxo.datum!, PurchaseOfferDatum);
-    return (datum.desired_policy_id == gameData.assetPolicyId) &&
-      (datum.desired_token_name == fromText(gameData.assetTokenName));
+    return (
+      datum.desired_policy_id === gameData.assetPolicyId &&
+      datum.desired_token_name === fromText(gameData.assetTokenName)
+    );
   })!;
   const offerUtxoOwner = Data.from(offerUtxo.datum!, PurchaseOfferDatum).owner;
-  const offerUtxoOwnerAddress = getBech32FromAddress(
-    lucid,
-    offerUtxoOwner,
-  );
-  const redeemer = Data.to({
-    sold_asset: {
-      policy_id: gameData.assetPolicyId,
-      asset_name: fromText(gameData.assetTokenName),
+  const offerUtxoOwnerAddress = getBech32FromAddress(lucid, offerUtxoOwner);
+  const redeemer = Data.to(
+    {
+      sold_asset: {
+        policy_id: gameData.assetPolicyId,
+        asset_name: fromText(gameData.assetTokenName),
+      },
     },
-  }, SellRedeemer);
+    SellRedeemer
+  );
 
   const tx = await lucid
     .newTx()
     .collectFrom([offerUtxo], redeemer)
-    .payToAddress(offerUtxoOwnerAddress, {
+    .pay.ToAddress(offerUtxoOwnerAddress, {
       [asset]: BigInt(1),
       lovelace: FIXED_MIN_ADA,
     })
-    .attachSpendingValidator(gameData.scriptValidator)
+    .attach.SpendingValidator(gameData.scriptValidator)
     .complete();
 
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx.sign.withWallet().complete();
   const purchaseTxHash = await signedTx.submit();
 
   console.log(
-    `Purchase Offer transaction submitted${
-      getFormattedTxDetails(purchaseTxHash, lucid)
-    }`,
+    `Purchase Offer transaction submitted${getFormattedTxDetails(purchaseTxHash, lucid)}`
   );
 
   await awaitTxConfirms(lucid, purchaseTxHash);

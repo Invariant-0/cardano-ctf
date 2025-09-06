@@ -1,9 +1,6 @@
-import { Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data } from '@lucid-evolution/lucid';
 
-import {
-  AddressSchema,
-  getAddressFromBech32,
-} from "../../common/offchain/types.ts";
+import { AddressSchema, getAddressFromBech32 } from '../../common/offchain/types';
 
 const SellNFTDatumSchema = Data.Object({
   seller: AddressSchema,
@@ -13,10 +10,7 @@ const SellNFTDatumSchema = Data.Object({
 type SellNFTDatum = Data.Static<typeof SellNFTDatumSchema>;
 export const SellNFTDatum = SellNFTDatumSchema as unknown as SellNFTDatum;
 
-export function createSellNFTDatumSchema(
-  addressBech32: string,
-  price: bigint,
-): string | undefined {
+export function createSellNFTDatumSchema(addressBech32: string, price: bigint): string | undefined {
   const seller = getAddressFromBech32(addressBech32);
   if (seller === undefined) {
     return undefined;

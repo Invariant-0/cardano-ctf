@@ -1,11 +1,12 @@
 import {
   Data,
-  Lucid,
+  LucidEvolution,
   MintingPolicy,
   PrivateKey,
   SpendingValidator,
   UTxO,
-} from "https://deno.land/x/lucid@0.10.7/mod.ts";
+} from '@lucid-evolution/lucid';
+import { getAddressDetails, generatePrivateKey } from '@lucid-evolution/utils';
 import {
   awaitTxConfirms,
   decodeBase64,
@@ -16,16 +17,16 @@ import {
   resetWallet,
   setupMintingPolicy,
   setupValidator,
-} from "../../common/offchain/utils.ts";
-import { createLendingDatum, LendingDatum, LendingRedeemer } from "./types.ts";
-import blueprint from "../plutus.json" with { type: "json" };
+} from '../../common/offchain/utils';
+import { createLendingDatum, LendingDatum, LendingRedeemer } from './types';
+import blueprint from '../plutus.json' with { type: 'json' };
 import {
   failTest,
   failTests,
   passAllTests,
   passTest,
   submitSolutionRecord,
-} from "../../common/offchain/test_utils.ts";
+} from '../../common/offchain/test_utils';
 
 export type Validators = {
   collateralPolicy: MintingPolicy;
@@ -47,13 +48,9 @@ export type GameData = {
 };
 export type TestData = void;
 
-function readValidators(lucid: Lucid): Validators {
-  const collateralToken = setupMintingPolicy(
-    lucid,
-    blueprint,
-    "collateral_token.collateral_token",
-  );
-  const lending = setupValidator(lucid, blueprint, "lending.lending");
+function readValidators(lucid: LucidEvolution): Validators {
+  const collateralToken = setupMintingPolicy(lucid, blueprint, 'collateral_token.collateral_token');
+  const lending = setupValidator(lucid, blueprint, 'lending.lending');
 
   return {
     collateralPolicy: collateralToken.policy,
@@ -63,26 +60,21 @@ function readValidators(lucid: Lucid): Validators {
   };
 }
 
-async function checkWalletValidity(
-  lucid: Lucid,
-  gameData: GameData,
-  wallet: Wallet,
-) {
+async function checkWalletValidity(lucid: LucidEvolution, gameData: GameData, wallet: Wallet) {
   const privateKey = wallet.privateKey;
-  const address = await lucid.selectWalletFromPrivateKey(privateKey).wallet
-    .address();
-  const sigHash = lucid.utils.getAddressDetails(address).paymentCredential
-    ?.hash;
+  await lucid.selectWallet.fromPrivateKey(privateKey);
+  const address = await lucid.wallet().address();
+  const sigHash = getAddressDetails(address).paymentCredential?.hash;
   if (sigHash === undefined) {
-    throw new Error("The signature hash of provided wallet was undefined.");
+    throw new Error('The signature hash of provided wallet was undefined.');
   }
   if (
-    wallet.address != address || wallet.hash != sigHash ||
-    wallet.collateralAsset !=
-      `${gameData.validators.collateralPolicyId}${sigHash}`
+    wallet.address !== address ||
+    wallet.hash !== sigHash ||
+    wallet.collateralAsset !== `${gameData.validators.collateralPolicyId}${sigHash}`
   ) {
     throw new Error(
-      "Wallet provided to askForRepayment() was compromised. This is not the intended exploit!",
+      'Wallet provided to askForRepayment() was compromised. This is not the intended exploit!'
     );
   }
   resetWallet(lucid);
@@ -96,36 +88,37 @@ async function checkWalletValidity(
  * @returns Lending UTxOs that resulted from the transaction repaying [utxos].
  */
 export async function askForRepayment(
-  lucid: Lucid,
+  lucid: LucidEvolution,
   gameData: GameData,
   wallet: Wallet,
-  utxos: UTxO[],
+  utxos: UTxO[]
 ): Promise<UTxO[]> {
-  const lenderAddress = await lucid.wallet.address();
+  const lenderAddress = await lucid.wallet().address();
 
   await checkWalletValidity(lucid, gameData, wallet);
 
-  lucid.selectWalletFromPrivateKey(wallet.privateKey);
+  lucid.selectWallet.fromPrivateKey(wallet.privateKey);
 
   const initialRepayTx = lucid
     .newTx()
-    .attachSpendingValidator(gameData.validators.lendingValidator)
-    .collectFrom(utxos, Data.to("Repay", LendingRedeemer));
+    .attach.SpendingValidator(gameData.validators.lendingValidator)
+    .collectFrom(utxos, Data.to('Repay', LendingRedeemer));
 
   const repayTx = utxos.reduce((accTx, utxo) => {
-    if (utxo.datum == null) {
-      throw new Error("UTxO does not contain datum.");
+    if (utxo.datum === null) {
+      throw new Error('UTxO does not contain datum.');
     }
     if (!(wallet.collateralAsset in utxo.assets)) {
-      throw new Error("UTxO does not contain expected collateral token.");
+      throw new Error('UTxO does not contain expected collateral token.');
     }
-    const datum = Data.from(utxo.datum, LendingDatum);
-    const repayment = datum.borrowed_amount +
-      datum.borrowed_amount * datum.interest / 10000n;
-    return accTx.payToContract(
+    const datum = Data.from(utxo.datum!, LendingDatum);
+    const repayment = datum.borrowed_amount + (datum.borrowed_amount * datum.interest) / 10000n;
+    return accTx.pay.ToContract(
       gameData.validators.lendingAddress,
+
       {
-        inline: createLendingDatum(
+        kind: 'inline',
+        value: createLendingDatum(
           wallet.address,
           lenderAddress,
           datum.borrowed_amount,
@@ -135,55 +128,46 @@ export async function askForRepayment(
           datum.collateral.policy_id,
           datum.collateral.asset_name,
           true,
-          datum.unique_id,
+          datum.unique_id
         ),
       },
-      { lovelace: repayment },
+      { lovelace: repayment }
     );
   }, initialRepayTx);
 
   const completedRTx = await repayTx.addSigner(wallet.address).complete();
-  const signedRTx = await completedRTx.sign().complete();
+  const signedRTx = await completedRTx.sign.withWallet().complete();
   const repayTxHash = await signedRTx.submit();
 
-  console.log(
-    `Provided UTxOs were repaid in full${
-      getFormattedTxDetails(repayTxHash, lucid)
-    }`,
-  );
+  console.log(`Provided UTxOs were repaid in full${getFormattedTxDetails(repayTxHash, lucid)}`);
 
   await awaitTxConfirms(lucid, repayTxHash);
 
   resetWallet(lucid);
 
-  return filterUTXOsByTxHash(
-    await lucid.utxosAt(gameData.validators!.lendingAddress),
-    repayTxHash,
-  );
+  return filterUTXOsByTxHash(await lucid.utxosAt(gameData.validators.lendingAddress), repayTxHash);
 }
 
-export async function setup(lucid: Lucid) {
+export async function setup(lucid: LucidEvolution) {
   console.log(`=== SETUP IN PROGRESS ===`);
 
   const currentBalance = await getWalletBalanceLovelace(lucid);
   if (currentBalance < 120000000) {
     throw new Error(
-      "Your wallet contains insufficient funds for this level. At least 120 ADA is needed. Use a faucet to obtain additional ADA.",
+      'Your wallet contains insufficient funds for this level. At least 120 ADA is needed. Use a faucet to obtain additional ADA.'
     );
   }
 
   const validators = readValidators(lucid);
 
-  const borrower1PK = lucid.utils.generatePrivateKey();
-  const borrower1Address = await lucid.selectWalletFromPrivateKey(borrower1PK)
-    .wallet.address();
-  const borrower1Hash =
-    lucid.utils.getAddressDetails(borrower1Address).paymentCredential!.hash;
-  const borrower2PK = lucid.utils.generatePrivateKey();
-  const borrower2Address = await lucid.selectWalletFromPrivateKey(borrower2PK)
-    .wallet.address();
-  const borrower2Hash =
-    lucid.utils.getAddressDetails(borrower2Address).paymentCredential!.hash;
+  const borrower1PK = generatePrivateKey();
+  await lucid.selectWallet.fromPrivateKey(borrower1PK);
+  const borrower1Address = await lucid.wallet().address();
+  const borrower1Hash = getAddressDetails(borrower1Address).paymentCredential!.hash;
+  const borrower2PK = generatePrivateKey();
+  await lucid.selectWallet.fromPrivateKey(borrower2PK);
+  const borrower2Address = await lucid.wallet().address();
+  const borrower2Hash = getAddressDetails(borrower2Address).paymentCredential!.hash;
 
   const borrower1Wallet: Wallet = {
     privateKey: borrower1PK,
@@ -204,16 +188,12 @@ export async function setup(lucid: Lucid) {
 
   const fundBorrowersTx = await lucid
     .newTx()
-    .payToAddress(borrower1Address, { lovelace: 50000000n })
-    .payToAddress(borrower2Address, { lovelace: 50000000n })
+    .pay.ToAddress(borrower1Address, { lovelace: 50000000n })
+    .pay.ToAddress(borrower2Address, { lovelace: 50000000n })
     .complete();
-  const signedFBTx = await fundBorrowersTx.sign().complete();
+  const signedFBTx = await fundBorrowersTx.sign.withWallet().complete();
   const submittedFBTx = await signedFBTx.submit();
-  console.log(
-    `Funding borrowers' wallets with ADA${
-      getFormattedTxDetails(submittedFBTx, lucid)
-    }`,
-  );
+  console.log(`Funding borrowers' wallets with ADA${getFormattedTxDetails(submittedFBTx, lucid)}`);
   await awaitTxConfirms(lucid, submittedFBTx);
 
   let uniqueId = 0;
@@ -239,17 +219,19 @@ export async function setup(lucid: Lucid) {
     4620000000n,
   ];
   for (const wallet of [borrower1Wallet, borrower2Wallet]) {
-    lucid.selectWalletFromPrivateKey(wallet.privateKey);
+    lucid.selectWallet.fromPrivateKey(wallet.privateKey);
     let createLendingsTx = lucid
       .newTx()
-      .attachMintingPolicy(validators.collateralPolicy)
+      .attach.MintingPolicy(validators.collateralPolicy)
       .mintAssets({ [wallet.collateralAsset]: 4n }, Data.void())
       .addSigner(wallet.address);
     for (let i = 0; i < 4; i++) {
-      createLendingsTx = createLendingsTx.payToContract(
+      createLendingsTx = createLendingsTx.pay.ToContract(
         validators.lendingAddress,
+
         {
-          inline: createLendingDatum(
+          kind: 'inline',
+          value: createLendingDatum(
             wallet.address,
             null,
             borrowedAmounts[uniqueId],
@@ -259,27 +241,28 @@ export async function setup(lucid: Lucid) {
             validators.collateralPolicyId,
             wallet.hash,
             false,
-            BigInt(uniqueId),
+            BigInt(uniqueId)
           ),
         },
-        { [wallet.collateralAsset]: 1n, lovelace: FIXED_MIN_ADA },
+        { [wallet.collateralAsset]: 1n, lovelace: FIXED_MIN_ADA }
       );
       uniqueId++;
     }
     const completedTx = await createLendingsTx.complete();
-    const signedTx = await completedTx.sign().complete();
+    const signedTx = await completedTx.sign.withWallet().complete();
     const submittedTx = await signedTx.submit();
 
     console.log(
-      `Loan requests created for wallet: ${wallet.address}${
-        getFormattedTxDetails(submittedTx, lucid)
-      }`,
+      `Loan requests created for wallet: ${wallet.address}${getFormattedTxDetails(
+        submittedTx,
+        lucid
+      )}`
     );
     await awaitTxConfirms(lucid, submittedTx);
 
     wallet.lendingUTxOs = filterUTXOsByTxHash(
-      await lucid.utxosAt(validators!.lendingAddress),
-      submittedTx,
+      await lucid.utxosAt(validators.lendingAddress),
+      submittedTx
     );
   }
 
@@ -298,21 +281,19 @@ export async function setup(lucid: Lucid) {
 }
 
 export async function test(
-  lucid: Lucid,
+  lucid: LucidEvolution,
   gameData: GameData,
-  _testData: TestData,
+  _testData: TestData
 ): Promise<boolean> {
   let passed = true;
   const endBalance = await getWalletBalanceLovelace(lucid);
-  console.log("================TESTS==================");
+  console.log('================TESTS==================');
 
   const profit = endBalance - gameData.originalBalance;
   console.log(`You have made a profit of ${profit} lovelace`);
 
   if (profit < 4000000n) {
-    failTest(
-      "TEST 1 FAILED -- Your wallet did not obtain enough additional ADA",
-    );
+    failTest('TEST 1 FAILED -- Your wallet did not obtain enough additional ADA');
     passed = false;
   } else {
     passTest("TEST 1 PASSED -- You've made a big profit, enjoy!", lucid);
@@ -322,14 +303,15 @@ export async function test(
     await submitSolutionRecord(lucid, 8n);
 
     const encodedBlogURL =
-      "aHR0cHM6Ly9tZWRpdW0uY29tL0BpbnZhcmlhbnQwL2NhcmRhbm8tY3RmLWhpbnRzLWFuZC1zb2x1dGlvbnMtZTM5OTFjZTZhOTQ0";
+      'aHR0cHM6Ly9tZWRpdW0uY29tL0BpbnZhcmlhbnQwL2NhcmRhbm8tY3RmLWhpbnRzLWFuZC1zb2x1dGlvbnMtZTM5OTFjZTZhOTQ0';
 
     passAllTests(
-      "\nCongratulations on the successful completion of the Level 08: Lending\n" +
-        `You can compare your solution with ours by reading this blog post: ${
-          decodeBase64(encodedBlogURL)
-        }` + "\nGood luck with the next level.",
-      lucid,
+      '\nCongratulations on the successful completion of the Level 08: Lending\n' +
+        `You can compare your solution with ours by reading this blog post: ${decodeBase64(
+          encodedBlogURL
+        )}` +
+        '\nGood luck with the next level.',
+      lucid
     );
 
     return true;

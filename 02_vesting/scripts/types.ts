@@ -1,4 +1,5 @@
-import { Data, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data } from '@lucid-evolution/lucid';
+import { getAddressDetails } from '@lucid-evolution/utils';
 
 const VestingSchema = Data.Object({
   lock_until: Data.Integer(),
@@ -8,16 +9,8 @@ const VestingSchema = Data.Object({
 type VestingDatum = Data.Static<typeof VestingSchema>;
 export const VestingDatum = VestingSchema as unknown as VestingDatum;
 
-export function createVestingDatum(
-  lucid: Lucid,
-  lockUntil: bigint,
-  beneficiary: string,
-): string | undefined {
-  let beneficiaryHash = lucid.utils.getAddressDetails(beneficiary)
-    .paymentCredential?.hash;
-  if (beneficiaryHash === undefined) {
-    beneficiaryHash = "";
-  }
+export function createVestingDatum(lockUntil: bigint, beneficiary: string): string {
+  const beneficiaryHash = getAddressDetails(beneficiary).paymentCredential!.hash;
   const datum: VestingDatum = {
     lock_until: lockUntil,
     beneficiary: beneficiaryHash,

@@ -1,47 +1,31 @@
-import {
-  brightGreen,
-  brightRed,
-  brightYellow,
-} from "https://deno.land/std@0.206.0/fmt/colors.ts";
-import { Data, fromText, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
-import { lucidTestnet } from "./setup_lucid.ts";
-import { FIXED_MIN_ADA, getCurrentTime, isEmulator } from "./utils.ts";
+import chalk from 'chalk';
+import { Data, fromText, LucidEvolution } from '@lucid-evolution/lucid';
+import { lucidTestnet } from './setup_lucid';
+import { FIXED_MIN_ADA, getCurrentTime, isEmulator } from './utils';
 
-export function passTest(s: string, l: Lucid) {
+export function passTest(s: string, l: LucidEvolution) {
   if (isEmulator(l)) {
-    console.log(brightYellow(s));
+    console.log(chalk.yellow(s));
   } else {
-    console.log(brightGreen(s));
+    console.log(chalk.green(s));
   }
 }
 
-export function passAllTests(s: string, l: Lucid) {
-  console.log("");
+export function passAllTests(s: string, l: LucidEvolution) {
+  console.log('');
   if (isEmulator(l)) {
-    console.log(
-      brightYellow(
-        "Congratulations! You seem to succesfully pass all the tests.",
-      ),
-    );
-    console.log(
-      brightYellow(
-        "To fully finish this task, you have to finish it on testnet too.",
-      ),
-    );
-    if (lucidTestnet == undefined) {
-      console.log(
-        brightYellow(
-          "Please refer to the README to configure everything correctly.",
-        ),
-      );
+    console.log(chalk.yellow('Congratulations! You seem to succesfully pass all the tests.'));
+    console.log(chalk.yellow('To fully finish this task, you have to finish it on testnet too.'));
+    if (lucidTestnet === undefined) {
+      console.log(chalk.yellow('Please refer to the README to configure everything correctly.'));
     }
   } else {
-    console.log(brightGreen(s));
+    console.log(chalk.green(s));
   }
 }
 
 export function failTest(s: string) {
-  console.log(brightRed(s));
+  console.log(chalk.red(s));
 }
 
 export function failTests() {
@@ -55,13 +39,12 @@ export const SolutionRecordSchema = Data.Object({
 });
 
 export type SolutionRecordDatum = Data.Static<typeof SolutionRecordSchema>;
-export const SolutionRecordDatum =
-  SolutionRecordSchema as unknown as SolutionRecordDatum;
+export const SolutionRecordDatum = SolutionRecordSchema as unknown as SolutionRecordDatum;
 
 function createSolutionRecordDatum(
   problemId: bigint,
   timestamp: bigint,
-  solverAddress: string,
+  solverAddress: string
 ): string {
   const datum: SolutionRecordDatum = {
     problem_id: problemId,
@@ -72,23 +55,24 @@ function createSolutionRecordDatum(
 }
 
 export const SOLUTION_RECORD_ADDRESS =
-  "addr_test1wqxdcgqqexv4mqfnaj2lp77824hcgz4fgsrkdhzwy2a20fq5zsp5u";
+  'addr_test1wqxdcgqqexv4mqfnaj2lp77824hcgz4fgsrkdhzwy2a20fq5zsp5u';
 
-export async function submitSolutionRecord(lucid: Lucid, problemId: bigint) {
+export async function submitSolutionRecord(lucid: LucidEvolution, problemId: bigint) {
   if (isEmulator(lucid)) return;
-  const ownAddress = await lucid.wallet.address();
+  const ownAddress = await lucid.wallet().address();
   const tx = await lucid
     .newTx()
-    .payToContract(SOLUTION_RECORD_ADDRESS, {
-      inline: createSolutionRecordDatum(
-        problemId,
-        BigInt(getCurrentTime(lucid)),
-        ownAddress,
-      ),
-    }, { lovelace: FIXED_MIN_ADA })
+    .pay.ToContract(
+      SOLUTION_RECORD_ADDRESS,
+      {
+        kind: 'inline',
+        value: createSolutionRecordDatum(problemId, BigInt(getCurrentTime(lucid)), ownAddress),
+      },
+      { lovelace: FIXED_MIN_ADA }
+    )
     .complete();
 
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx.sign.withWallet().complete();
   await signedTx.submit();
 
   console.log(`Submitting solution record on the testnet.`);

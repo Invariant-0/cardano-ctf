@@ -1,21 +1,14 @@
-import { Data, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data, LucidEvolution } from '@lucid-evolution/lucid';
 import {
   awaitTxConfirms,
   filterUTXOsByTxHash,
   FIXED_MIN_ADA,
   getFormattedTxDetails,
-} from "../../common/offchain/utils.ts";
-import {
-  createMultisigDatum,
-  createTreasuryDatum,
-  MultisigRedeemer,
-} from "./types.ts";
-import { GameData, TestData } from "./task.ts";
+} from '../../common/offchain/utils';
+import { createMultisigDatum, createTreasuryDatum, MultisigRedeemer } from './types';
+import { GameData, TestData } from './task';
 
-export async function play(
-  lucid: Lucid,
-  gameData: GameData,
-): Promise<TestData> {
+export async function play(lucid: LucidEvolution, gameData: GameData): Promise<TestData> {
   /**
    * The smart contracts are already deployed, see the [run.ts] file for more details.
    * The [gameData] variable contains all the things you need to interact with the vulnerable smart contracts.
@@ -34,63 +27,63 @@ export async function play(
    * Note: Do NOT change anything in the gameData variable.
    */
 
-  const ownAddress = await lucid.wallet.address();
+  const ownAddress = await lucid.wallet().address();
 
   const signMultisigTx = await lucid
     .newTx()
-    .collectFrom([gameData.multisigUTxO], Data.to("Sign", MultisigRedeemer))
-    .payToContract(gameData.validators.multisigAddress, {
-      inline: createMultisigDatum(
-        BigInt(8000000),
-        gameData.multisigBeneficiary,
-        gameData.treasuryOwners,
-        [ownAddress],
-        lucid,
-      ),
-    }, { lovelace: FIXED_MIN_ADA })
-    .attachSpendingValidator(gameData.validators.multisigValidator)
+    .collectFrom([gameData.multisigUTxO], Data.to('Sign', MultisigRedeemer))
+    .pay.ToContract(
+      gameData.validators.multisigAddress,
+      {
+        kind: 'inline',
+        value: createMultisigDatum(
+          BigInt(8000000),
+          gameData.multisigBeneficiary,
+          gameData.treasuryOwners,
+          [ownAddress]
+        ),
+      },
+      { lovelace: FIXED_MIN_ADA }
+    )
+    .attach.SpendingValidator(gameData.validators.multisigValidator)
     .addSigner(ownAddress)
     .complete();
 
-  const signedMSTx = await signMultisigTx.sign().complete();
+  const signedMSTx = await signMultisigTx.sign.withWallet().complete();
   const submittedMSTx = await signedMSTx.submit();
   console.log(
-    `Multisig signing transaction submitted${
-      getFormattedTxDetails(submittedMSTx, lucid)
-    }`,
+    `Multisig signing transaction submitted${getFormattedTxDetails(submittedMSTx, lucid)}`
   );
   await awaitTxConfirms(lucid, submittedMSTx);
 
   const multisigUTxO = filterUTXOsByTxHash(
     await lucid.utxosAt(gameData.validators.multisigAddress),
-    submittedMSTx,
+    submittedMSTx
   );
 
-  const treasuryBalance = gameData.treasuryFunds -
-    gameData.multisigReleaseValue;
+  const treasuryBalance = gameData.treasuryFunds - gameData.multisigReleaseValue;
 
   const unlockTreasuryTx = await lucid
     .newTx()
-    .collectFrom(multisigUTxO, Data.to("Use", MultisigRedeemer))
+    .collectFrom(multisigUTxO, Data.to('Use', MultisigRedeemer))
     .collectFrom([gameData.treasuryUTxO], Data.void())
-    .payToContract(gameData.validators.treasuryAddress, {
-      inline: createTreasuryDatum(
-        treasuryBalance,
-        gameData.treasuryOwners,
-        lucid,
-      ),
-    }, { lovelace: treasuryBalance })
+    .pay.ToContract(
+      gameData.validators.treasuryAddress,
+      {
+        kind: 'inline',
+        value: createTreasuryDatum(treasuryBalance, gameData.treasuryOwners),
+      },
+      { lovelace: treasuryBalance }
+    )
     .addSigner(ownAddress)
-    .attachSpendingValidator(gameData.validators.multisigValidator)
-    .attachSpendingValidator(gameData.validators.treasuryValidator)
+    .attach.SpendingValidator(gameData.validators.multisigValidator)
+    .attach.SpendingValidator(gameData.validators.treasuryValidator)
     .complete();
 
-  const signedUnlockTx = await unlockTreasuryTx.sign().complete();
+  const signedUnlockTx = await unlockTreasuryTx.sign.withWallet().complete();
   const submittedUnlockTx = await signedUnlockTx.submit();
   console.log(
-    `Access treasury signed transaction submitted${
-      getFormattedTxDetails(submittedUnlockTx, lucid)
-    }`,
+    `Access treasury signed transaction submitted${getFormattedTxDetails(submittedUnlockTx, lucid)}`
   );
   await awaitTxConfirms(lucid, submittedUnlockTx);
 

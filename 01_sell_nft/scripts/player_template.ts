@@ -1,15 +1,9 @@
-import { Data, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
-import {
-  awaitTxConfirms,
-  getFormattedTxDetails,
-} from "../../common/offchain/utils.ts";
-import { SellNFTDatum } from "./types.ts";
-import { GameData, TestData } from "./task.ts";
+import { Data, LucidEvolution } from '@lucid-evolution/lucid';
+import { awaitTxConfirms, getFormattedTxDetails } from '../../common/offchain/utils';
+import { SellNFTDatum } from './types';
+import { GameData, TestData } from './task';
 
-export async function play(
-  lucid: Lucid,
-  gameData: GameData,
-): Promise<TestData> {
+export async function play(lucid: LucidEvolution, gameData: GameData): Promise<TestData> {
   /**
    * The smart contracts are already deployed, see the [run.ts] file for more details.
    * The [gameData] variable contains all the things you need to interact with the vulnerable smart contracts.
@@ -20,29 +14,29 @@ export async function play(
   const validator = gameData.scriptValidator;
   const utxos = gameData.scriptUtxos;
   const seller = gameData.seller;
-  const contract = gameData.scriptAddress;
-  const asset1 = gameData.assets[0];
-  const asset2 = gameData.assets[1];
+  const _contract = gameData.scriptAddress;
+  const _asset1 = gameData.assets[0];
+  const _asset2 = gameData.assets[1];
 
-  if (utxos[0].datum == null || utxos[1].datum == null) {
-    throw new Error("UTxO object does not contain datum.");
+  if (utxos[0].datum === null || utxos[1].datum === null) {
+    throw new Error('UTxO object does not contain datum.');
   }
 
-  const datum1 = Data.from(utxos[0].datum, SellNFTDatum);
-  const datum2 = Data.from(utxos[1].datum, SellNFTDatum);
+  const datum1 = Data.from(utxos[0].datum!, SellNFTDatum);
+  const datum2 = Data.from(utxos[1].datum!, SellNFTDatum);
 
   // ================ YOUR CODE STARTS HERE
 
-  console.log("\nTwo UTxOs at the smart contract script address were created.");
+  console.log('\nTwo UTxOs at the smart contract script address were created.');
 
   console.log(`\nThe first UTxO has following atributes`);
   console.log(utxos[0]);
-  console.log(`\nIt's datum is following`);
+  console.log(`\nIts datum is the following`);
   console.log(datum1);
 
   console.log(`\nThe second UTxO has following atributes`);
   console.log(utxos[1]);
-  console.log(`\nIt's datum is following`);
+  console.log(`\nIts datum is the following`);
   console.log(datum2);
 
   /**
@@ -57,16 +51,14 @@ export async function play(
   const tx = await lucid
     .newTx()
     .collectFrom([utxos[1]], Data.void())
-    .payToAddress(seller, { lovelace: datum2.price })
-    .attachSpendingValidator(validator)
+    .pay.ToAddress(seller, { lovelace: datum2.price })
+    .attach.SpendingValidator(validator)
     .complete();
 
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx.sign.withWallet().complete();
   const buyingTxHash = await signedTx.submit();
 
-  console.log(
-    `BuyNFT transaction submitted${getFormattedTxDetails(buyingTxHash, lucid)}`,
-  );
+  console.log(`BuyNFT transaction submitted${getFormattedTxDetails(buyingTxHash, lucid)}`);
 
   await awaitTxConfirms(lucid, buyingTxHash);
 

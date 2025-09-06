@@ -5,45 +5,37 @@ import {
   PRIVATE_KEY,
   USE_EMULATOR,
   USE_TESTNET,
-} from "./config.ts";
-import {
-  emulator,
-  EMULATOR_PRIVATE_KEY,
-  lucidEmulator,
-  lucidTestnet,
-} from "./setup_lucid.ts";
+} from './config';
+import { emulator, EMULATOR_PRIVATE_KEY, lucidEmulator, lucidTestnet } from './setup_lucid';
 import {
   applyParamsToScript,
-  C,
+  CML,
   Data,
-  Lucid,
+  LucidEvolution,
   MintingPolicy,
   Script,
   SpendingValidator,
   UTxO,
-} from "https://deno.land/x/lucid@0.10.7/mod.ts";
-import { OurEmulator } from "./emulator_provider.ts";
-import {
-  decode,
-  encode,
-} from "https://deno.land/std@0.202.0/encoding/base64.ts";
+  Emulator,
+} from '@lucid-evolution/lucid';
+import { validatorToScriptHash, validatorToAddress } from '@lucid-evolution/utils';
+// import { OurEmulator } from './emulator_provider';
 
 export const FIXED_MIN_ADA = 2000000n;
 
-async function writeStringWithoutNewline(s: string) {
-  const text = new TextEncoder().encode(s);
-  await Deno.stdout.write(text);
+function writeStringWithoutNewline(s: string) {
+  process.stdout.write(s);
 }
 
-export function isEmulator(lucid: Lucid) {
-  return lucid.provider instanceof OurEmulator;
+export function isEmulator(lucid: LucidEvolution) {
+  return lucid.config().provider instanceof Emulator;
 }
 
 export function awaitTxConfirms(
-  lucid: Lucid,
+  lucid: LucidEvolution,
   txHash: string,
   confirms = CONFIRMS_WAIT,
-  checkInterval = 3000,
+  checkInterval = 3000
 ): Promise<boolean> {
   return new Promise((res) => {
     if (isEmulator(lucid)) {
@@ -53,62 +45,68 @@ export function awaitTxConfirms(
 
     writeStringWithoutNewline(`Waiting for ${confirms} tx confirmations...`);
     const confirmation = setInterval(async () => {
-      const isConfirmed = await fetch(`${BLOCKFROST_URL}/txs/${txHash}`, {
-        headers: { project_id: BLOCKFROST_API_KEY },
-      }).then((res) => res.json());
-      writeStringWithoutNewline(".");
-      if (isConfirmed && !isConfirmed.error) {
-        const blockHash = isConfirmed.block;
-        const block = await fetch(`${BLOCKFROST_URL}/blocks/${blockHash}`, {
+      try {
+        const isConfirmed = await fetch(`${BLOCKFROST_URL}/txs/${txHash}`, {
           headers: { project_id: BLOCKFROST_API_KEY },
         }).then((res) => res.json());
-        if (block.confirmations >= confirms) {
-          writeStringWithoutNewline("\n");
-          clearInterval(confirmation);
-          await new Promise((res) => setTimeout(() => res(1), 1000));
-          return res(true);
+        writeStringWithoutNewline('.');
+
+        if (isConfirmed && !isConfirmed.error) {
+          try {
+            const blockHash = isConfirmed.block;
+            const block = await fetch(`${BLOCKFROST_URL}/blocks/${blockHash}`, {
+              headers: { project_id: BLOCKFROST_API_KEY },
+            }).then((res) => res.json());
+
+            if (block.confirmations >= confirms) {
+              writeStringWithoutNewline('\n');
+              console.log(`Transaction confirmed!${getFormattedTxDetails(txHash, lucid)}`);
+              clearInterval(confirmation);
+              await new Promise((res) => setTimeout(() => res(1), 1000));
+              return res(true);
+            }
+          } catch (error) {
+            console.log('Error fetching block info, retrying...', error);
+          }
         }
+      } catch (error) {
+        console.log('Error fetching transaction info, retrying...', error);
       }
     }, checkInterval);
   });
 }
 
 export function filterUTXOsByTxHash(utxos: UTxO[], txhash: string) {
-  return utxos.filter((x) => txhash == x.txHash);
+  return utxos.filter((x) => txhash === x.txHash);
 }
 
-export async function getWalletBalanceLovelace(lucid: Lucid) {
-  const utxos = await lucid.wallet.getUtxos()!;
+export async function getWalletBalanceLovelace(lucid: LucidEvolution) {
+  const utxos = await lucid.wallet().getUtxos();
   return utxos.reduce((sum, utxo) => sum + utxo.assets.lovelace, 0n);
 }
 
-export function cardanoscanLink(txHash: string, lucid: Lucid) {
+export function cardanoscanLink(txHash: string, lucid: LucidEvolution) {
   return isEmulator(lucid)
-    ? ""
+    ? ''
     : `Check details at https://preview.cardanoscan.io/transaction/${txHash} `;
 }
 
-export function getFormattedTxDetails(txHash: string, lucid: Lucid) {
+export function getFormattedTxDetails(txHash: string, lucid: LucidEvolution) {
   return `\n\tTx ID: ${txHash}\n\t${cardanoscanLink(txHash, lucid)}`;
 }
 
 export function encodeBase64(str: string): string {
-  return encode(str);
+  return Buffer.from(str, 'utf8').toString('base64');
 }
 
 export function decodeBase64(str: string): string {
-  const textDecoder = new TextDecoder();
-  return textDecoder.decode(decode(str));
+  return Buffer.from(str, 'base64').toString('utf8');
 }
 
 export function runTask<GameData, TestData>(
-  setup: (lucid: Lucid) => Promise<GameData>,
-  play: (lucid: Lucid, gameData: GameData) => Promise<TestData>,
-  test: (
-    lucid: Lucid,
-    gameData: GameData,
-    testData: TestData,
-  ) => Promise<boolean>,
+  setup: (lucid: LucidEvolution) => Promise<GameData>,
+  play: (lucid: LucidEvolution, gameData: GameData) => Promise<TestData>,
+  test: (lucid: LucidEvolution, gameData: GameData, testData: TestData) => Promise<boolean>
 ) {
   /**
    * Given a specific environment provided by lucid (emulator, testnet), we:
@@ -116,46 +114,38 @@ export function runTask<GameData, TestData>(
    *   2. Run your interaction.
    *   3. Run tests on the resulting state to find out whether you successfully completed the level.
    */
-  const runInSingleEnvironment = async (lucid: Lucid): Promise<boolean> => {
+  const runInSingleEnvironment = async (lucid: LucidEvolution): Promise<boolean> => {
     const gameData = await setup(lucid);
     const testData = await play(lucid, gameData);
     return test(lucid, gameData, testData);
   };
 
-  const runInAllEnvironments = async (
-    run: (lucid: Lucid) => Promise<boolean>,
-  ) => {
+  const runInAllEnvironments = async (run: (lucid: LucidEvolution) => Promise<boolean>) => {
     let testsPassedEmulator = true;
     if (USE_EMULATOR) {
       try {
-        console.log("Running on emulator...");
+        console.log('Running on emulator...');
         testsPassedEmulator = await run(lucidEmulator);
       } catch (e) {
         console.log(e);
-        console.log(
-          "An error happened while running your code in the emulator.",
-        );
+        console.log('An error happened while running your code in the emulator.');
         testsPassedEmulator = false;
       }
     } else {
-      console.log("Emulator is disabled, skipping...");
+      console.log('Emulator is disabled, skipping...');
     }
     if (testsPassedEmulator) {
       if (!USE_TESTNET) {
-        console.log("Testnet is disabled, skipping...");
-      } else if (lucidTestnet == undefined) {
-        console.log(
-          "Testnet is not configured, finish your configuration according to the README",
-        );
+        console.log('Testnet is disabled, skipping...');
+      } else if (lucidTestnet === undefined) {
+        console.log('Testnet is not configured, finish your configuration according to the README');
       } else {
-        console.log(
-          "Running the task on testnet now, this will take some time...",
-        );
+        console.log('Running the task on testnet now, this will take some time...');
         await run(lucidTestnet);
       }
     } else {
       console.log(
-        "Tests did not pass on emulator, skipping the testnet. To force testnet, set USE_EMULATOR in config to false.",
+        'Tests did not pass on emulator, skipping the testnet. To force testnet, set USE_EMULATOR in config to false.'
       );
     }
   };
@@ -171,18 +161,16 @@ export async function sleep(milliseconds: bigint): Promise<void> {
   const oneDayInMilliseconds = BigInt(24 * 60 * 60 * 1000);
 
   if (milliseconds >= oneDayInMilliseconds) {
-    await new Promise((resolve) =>
-      setTimeout(resolve, Number(oneDayInMilliseconds))
-    );
+    await new Promise((resolve) => setTimeout(resolve, Number(oneDayInMilliseconds)));
     await sleep(milliseconds - oneDayInMilliseconds);
   } else {
     await new Promise((resolve) => setTimeout(resolve, Number(milliseconds)));
   }
 }
 
-export function getCurrentTime(lucid: Lucid) {
+export function getCurrentTime(lucid: LucidEvolution) {
   if (isEmulator(lucid)) {
-    return (lucid.provider as OurEmulator).now();
+    return (lucid.config().provider as unknown as Emulator).now();
   }
   const current = new Date();
   return current.getTime();
@@ -200,40 +188,35 @@ export function hour() {
   return 60 * minute();
 }
 
-export function privateKeyToPubKeyHash(bech32PrivateKey: string) {
-  return C.PrivateKey.from_bech32(bech32PrivateKey).to_public().hash();
+export function day() {
+  return 24 * hour();
 }
 
-export function pubKeyHashToAddress(pubKeyHash: C.Ed25519KeyHash) {
-  return C.EnterpriseAddress.new(0, C.StakeCredential.from_keyhash(pubKeyHash))
+export function privateKeyToPubKeyHash(bech32PrivateKey: string) {
+  return CML.PrivateKey.from_bech32(bech32PrivateKey).to_public().hash();
+}
+
+export function pubKeyHashToAddress(pubKeyHash: CML.Ed25519KeyHash) {
+  return CML.EnterpriseAddress.new(0, CML.Credential.new_pub_key(pubKeyHash))
     .to_address()
     .to_bech32(undefined);
 }
 
-export function resetWallet(lucid: Lucid) {
+export function resetWallet(lucid: LucidEvolution) {
   if (isEmulator(lucid)) {
-    lucid.selectWalletFromPrivateKey(EMULATOR_PRIVATE_KEY);
+    lucid.selectWallet.fromPrivateKey(EMULATOR_PRIVATE_KEY);
   } else {
-    lucid.selectWalletFromPrivateKey(PRIVATE_KEY);
+    lucid.selectWallet.fromPrivateKey(PRIVATE_KEY);
   }
 }
 
-export async function fundWallet(
-  lucid: Lucid,
-  address: string,
-  lovelace: bigint,
-) {
-  const tx = await lucid
-    .newTx()
-    .payToAddress(address, { lovelace })
-    .complete();
+export async function fundWallet(lucid: LucidEvolution, address: string, lovelace: bigint) {
+  const tx = await lucid.newTx().pay.ToAddress(address, { lovelace }).complete();
 
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx.sign.withWallet().complete();
   const submittedTx = await signedTx.submit();
 
-  console.log(
-    `Funded wallet ${address}${getFormattedTxDetails(submittedTx, lucid)}`,
-  );
+  console.log(`Funded wallet ${address}${getFormattedTxDetails(submittedTx, lucid)}`);
 
   await awaitTxConfirms(lucid, submittedTx);
 }
@@ -253,24 +236,22 @@ type ValidatorData = {
 };
 
 export function setupValidator(
-  lucid: Lucid,
+  lucid: LucidEvolution,
   blueprint: BlueprintJSON,
   name: string,
-  parameters?: Data[],
+  parameters?: Data[]
 ): ValidatorData {
-  const jsonData = blueprint.validators.find((v) => v.title == name);
+  const jsonData = blueprint.validators.find((v) => v.title === name);
   if (!jsonData) {
     throw new Error(`Validator with a name ${name} was not found.`);
   }
   const compiledCode = jsonData.compiledCode;
   const validator: Script = {
-    type: "PlutusV2",
-    script: parameters === undefined
-      ? compiledCode
-      : applyParamsToScript(compiledCode, parameters),
+    type: 'PlutusV2',
+    script: parameters === undefined ? compiledCode : applyParamsToScript(compiledCode, parameters),
   };
-  const address = lucid.utils.validatorToAddress(validator);
-  const hash = lucid.utils.validatorToScriptHash(validator);
+  const address = validatorToAddress(lucid.config().network!, validator);
+  const hash = validatorToScriptHash(validator);
 
   return { validator, address, hash };
 }
@@ -281,22 +262,20 @@ type MintingPolicyData = {
 };
 
 export function setupMintingPolicy(
-  lucid: Lucid,
+  lucid: LucidEvolution,
   blueprint: BlueprintJSON,
   name: string,
-  parameters?: Data[],
+  parameters?: Data[]
 ): MintingPolicyData {
-  const jsonData = blueprint.validators.find((v) => v.title == name);
+  const jsonData = blueprint.validators.find((v) => v.title === name);
   if (!jsonData) {
-    throw new Error("Validation token policy not found.");
+    throw new Error('Validation token policy not found.');
   }
   const compiledCode = jsonData.compiledCode;
   const policy: MintingPolicy = {
-    type: "PlutusV2",
-    script: parameters === undefined
-      ? compiledCode
-      : applyParamsToScript(compiledCode, parameters),
+    type: 'PlutusV2',
+    script: parameters === undefined ? compiledCode : applyParamsToScript(compiledCode, parameters),
   };
-  const policyId = lucid.utils.validatorToScriptHash(policy);
+  const policyId = validatorToScriptHash(policy);
   return { policy, policyId };
 }

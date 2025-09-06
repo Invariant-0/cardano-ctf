@@ -1,16 +1,10 @@
-import { Data, Lucid } from "https://deno.land/x/lucid@0.10.7/mod.ts";
-import {
-  awaitTxConfirms,
-  getFormattedTxDetails,
-} from "../../common/offchain/utils.ts";
-import { createKingOfCardanoDatum, KingDatum, KingRedeemer } from "./types.ts";
-import { GameData, TestData } from "./task.ts";
-import { getBech32FromAddress } from "../../common/offchain/types.ts";
+import { Data, LucidEvolution } from '@lucid-evolution/lucid';
+import { awaitTxConfirms, getFormattedTxDetails } from '../../common/offchain/utils';
+import { createKingOfCardanoDatum, KingDatum, KingRedeemer } from './types';
+import { GameData, TestData } from './task';
+import { getBech32FromAddress } from '../../common/offchain/types';
 
-export async function play(
-  lucid: Lucid,
-  gameData: GameData,
-): Promise<TestData> {
+export async function play(lucid: LucidEvolution, gameData: GameData): Promise<TestData> {
   /**
    * The smart contracts are already deployed, see the [run.ts] file for more details.
    * The [gameData] variable contains all the things you need to interact with the vulnerable smart contracts.
@@ -28,42 +22,36 @@ export async function play(
    * We overthrow the king and hope no one overthrows us later!
    */
 
-  const {
-    validators,
-    kingUTxO,
-  } = gameData;
+  const { validators, kingUTxO } = gameData;
 
   const datum = Data.from(kingUTxO.datum!, KingDatum);
-  const lovelaceInUTxO = kingUTxO.assets["lovelace"];
+  const lovelaceInUTxO = kingUTxO.assets['lovelace']!;
 
-  const currentKingAddress = getBech32FromAddress(
-    lucid,
-    datum.current_king,
-  );
-  console.log("Going to overthrow the current king.");
+  const currentKingAddress = getBech32FromAddress(lucid, datum.current_king);
+  console.log('Going to overthrow the current king.');
 
   const tx = await lucid
     .newTx()
-    .collectFrom([kingUTxO], Data.to("OverthrowKing", KingRedeemer))
-    .payToContract(kingUTxO.address, {
-      inline: createKingOfCardanoDatum(await lucid.wallet.address(), false),
-    }, {
-      lovelace: lovelaceInUTxO + 5000000n,
-      [validators.uniqueNFTAsset]: BigInt(1),
-    })
-    .payToAddress(currentKingAddress, { lovelace: lovelaceInUTxO })
-    .attachSpendingValidator(validators.kingOfCardanoValidator)
+    .collectFrom([kingUTxO], Data.to('OverthrowKing', KingRedeemer))
+    .pay.ToContract(
+      kingUTxO.address,
+      { kind: 'inline', value: createKingOfCardanoDatum(await lucid.wallet().address(), false) },
+      {
+        lovelace: lovelaceInUTxO + 5000000n,
+        [validators.uniqueNFTAsset]: BigInt(1),
+      }
+    )
+    .pay.ToAddress(currentKingAddress, { lovelace: lovelaceInUTxO })
+    .attach.SpendingValidator(validators.kingOfCardanoValidator)
     .complete();
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx.sign.withWallet().complete();
   const overthrowTxHash = await signedTx.submit();
 
-  console.log(
-    `Overthrow Tx submitted${getFormattedTxDetails(overthrowTxHash, lucid)}`,
-  );
+  console.log(`Overthrow Tx submitted${getFormattedTxDetails(overthrowTxHash, lucid)}`);
   await awaitTxConfirms(lucid, overthrowTxHash);
 
   // The resulting token name of the King of Cardano NFT will be equal to: "{nick} is King of Cardano"
-  const nick = "Invariant0";
+  const nick = 'Invariant0';
 
   // ================ YOUR CODE ENDS HERE
 

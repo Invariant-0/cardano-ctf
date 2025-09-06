@@ -1,11 +1,14 @@
 import {
-  C,
-  Credential as LucidCredential,
+  CML,
   Data,
   getAddressDetails,
-  Lucid,
+  LucidEvolution,
   networkToId,
-} from "https://deno.land/x/lucid@0.10.7/mod.ts";
+  Credential as LucidCredential,
+} from '@lucid-evolution/lucid';
+import { PointerAddress, Pointer, KeyHash, ScriptHash } from '@lucid-evolution/experimental';
+import { credentialToAddress } from '@lucid-evolution/utils';
+import { Effect, Schema } from 'effect';
 
 export const CredentialSchema = Data.Enum([
   Data.Object({ VerificationKeyCredential: Data.Tuple([Data.Bytes()]) }),
@@ -16,11 +19,7 @@ const PaymentCredentialSchema = CredentialSchema;
 const StakeCredentialSchema = Data.Enum([
   Data.Object({ Inline: Data.Tuple([CredentialSchema]) }),
   Data.Object({
-    Pointer: Data.Tuple([
-      Data.Integer(),
-      Data.Integer(),
-      Data.Integer(),
-    ]),
+    Pointer: Data.Tuple([Data.Integer(), Data.Integer(), Data.Integer()]),
   }),
 ]);
 
@@ -34,11 +33,11 @@ type Address = Data.Static<typeof AddressSchema>;
 
 function getCredential(credential: LucidCredential): Credential {
   switch (credential.type) {
-    case "Script":
+    case 'Script':
       return {
         ScriptCredential: [credential.hash] as [string],
       };
-    case "Key":
+    case 'Key':
       return {
         VerificationKeyCredential: [credential.hash] as [string],
       };
@@ -46,15 +45,15 @@ function getCredential(credential: LucidCredential): Credential {
 }
 
 function getLucidCredential(credential: Credential): LucidCredential {
-  if ("VerificationKeyCredential" in credential) {
+  if ('VerificationKeyCredential' in credential) {
     return {
-      type: "Key",
+      type: 'Key',
       hash: credential.VerificationKeyCredential[0],
     };
   }
 
   return {
-    type: "Script",
+    type: 'Script',
     hash: credential.ScriptCredential[0],
   };
 }
@@ -67,40 +66,43 @@ export function getAddressFromBech32(bech32Address: string): Address {
   }
 
   return {
-    payment_credential: getCredential(
-      addressDetails.paymentCredential,
-    ),
+    payment_credential: getCredential(addressDetails.paymentCredential),
     stake_credential: addressDetails.stakeCredential
       ? { Inline: [getCredential(addressDetails.stakeCredential)] }
       : null,
   };
 }
 
-export function getBech32FromAddress(lucid: Lucid, address: Address): string {
+export function getBech32FromAddress(lucid: LucidEvolution, address: Address): string {
   const paymentCredential = getLucidCredential(address.payment_credential);
 
-  if (!address.stake_credential || ("Inline" in address.stake_credential)) {
+  if (!address.stake_credential || 'Inline' in address.stake_credential) {
     const stakeCredential = address.stake_credential
-      ? getLucidCredential(address.stake_credential["Inline"][0])
+      ? getLucidCredential(address.stake_credential['Inline'][0])
       : undefined;
-    return lucid.utils.credentialToAddress(paymentCredential, stakeCredential);
+    return credentialToAddress(lucid.config().network!, paymentCredential, stakeCredential);
   }
 
-  return C.PointerAddress.new(
-    networkToId(lucid.network),
-    paymentCredential.type === "Key"
-      ? C.StakeCredential.from_keyhash(
-        C.Ed25519KeyHash.from_hex(paymentCredential.hash),
-      )
-      : C.StakeCredential.from_scripthash(
-        C.ScriptHash.from_hex(paymentCredential.hash),
-      ),
-    C.Pointer.new(
-      C.BigNum.from_str(address.stake_credential.Pointer[0].toString()),
-      C.BigNum.from_str(address.stake_credential.Pointer[1].toString()),
-      C.BigNum.from_str(address.stake_credential.Pointer[2].toString()),
-    ),
-  )
-    .to_address()
-    .to_bech32(undefined);
+  // Extract pointer values
+  const [slot, txIndex, certIndex] = address.stake_credential.Pointer;
+
+  // Create the experimental PointerAddress - only that one somewhat handles pointer addresses
+  // Beware: Only positive slot, txIndex, and certIndex are supported by this library (non-zero non-negatives)
+  const PointerAddressClass = PointerAddress.PointerAddress;
+  const experimentalPointerAddress = new PointerAddressClass({
+    networkId: networkToId(lucid.config().network!) as any,
+    paymentCredential:
+      paymentCredential.type === 'Key'
+        ? new KeyHash.KeyHash({ hash: paymentCredential.hash as any })
+        : new ScriptHash.ScriptHash({ hash: paymentCredential.hash as any }),
+    pointer: Pointer.make(slot as any, txIndex as any, certIndex as any),
+  });
+
+  // Convert to bytes using Effect Schema
+  const encoded = Schema.encode(PointerAddress.Bytes)(experimentalPointerAddress);
+  const bytes = Effect.runSync(encoded);
+
+  // Convert bytes to CML Address and then to bech32
+  const cmlAddress = CML.Address.from_raw_bytes(bytes);
+  return cmlAddress.to_bech32(undefined);
 }

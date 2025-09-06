@@ -1,9 +1,6 @@
-import { Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Data } from '@lucid-evolution/lucid';
 
-import {
-  AddressSchema,
-  getAddressFromBech32,
-} from "../../common/offchain/types.ts";
+import { AddressSchema, getAddressFromBech32 } from '../../common/offchain/types';
 
 const KingDatumSchema = Data.Object({
   current_king: AddressSchema,
@@ -15,19 +12,16 @@ export const KingDatum = KingDatumSchema as unknown as KingDatum;
 
 export function createKingOfCardanoDatum(
   addressBech32: string,
-  competitionClosed: boolean,
+  competitionClosed: boolean
 ): string {
   const current_king = getAddressFromBech32(addressBech32);
-  return Data.to(
-    { current_king, competition_closed: competitionClosed },
-    KingDatum,
-  );
+  return Data.to({ current_king, competition_closed: competitionClosed }, KingDatum);
 }
 
 const KingRedeemerSchema = Data.Enum([
-  Data.Literal("OverthrowKing"),
-  Data.Literal("MintKingNFT"),
-  Data.Literal("CloseCompetition"),
+  Data.Literal('OverthrowKing'),
+  Data.Literal('MintKingNFT'),
+  Data.Literal('CloseCompetition'),
 ]);
 
 type KingRedeemer = Data.Static<typeof KingRedeemerSchema>;
@@ -36,5 +30,4 @@ export const KingRedeemer = KingRedeemerSchema as unknown as KingRedeemer;
 const KingNFTRedeemerSchema = Data.Bytes();
 
 type KingNFTRedeemer = Data.Static<typeof KingNFTRedeemerSchema>;
-export const KingNFTRedeemer =
-  KingNFTRedeemerSchema as unknown as KingNFTRedeemer;
+export const KingNFTRedeemer = KingNFTRedeemerSchema as unknown as KingNFTRedeemer;
