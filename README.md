@@ -1,8 +1,6 @@
 # Cardano Vulnerabilities Game — Capture the Flag (CTF)
 
-Welcome to the Cardano Capture the Flag (CTF) challenge by the
-[Vacuumlabs Auditing](https://vacuumlabs.com/blockchain/smart-contract-auditing/)
-team!
+Welcome to the Cardano Capture the Flag (CTF) challenge by [Invariant0](https://invariant0.com/), the former Vacuumlabs Auditing team!
 
 It is a game where Cardano developers and enthusiasts can try to exploit
 purposely vulnerable smart contracts and learn about the most common security
@@ -16,16 +14,16 @@ write more secure smart contracts.
   <a href="https://discord.gg/5XVW2MUdWu">
     <img alt="Discord" src="https://img.shields.io/badge/Join%20us%20on-Discord-blue?logo=discord">
   </a>
-  <a href="https://medium.com/@vacuumlabs_auditing">
+  <a href="https://medium.com/@invariant0">
     <img alt="Medium" src="https://img.shields.io/badge/Read%20our%20blogs-on%20Medium-blue?logo=medium">
   </a>
-  <a href="https://twitter.com/vacuumlabs">
-    <img alt="Twitter" src="https://img.shields.io/badge/Follow-@vacuumlabs-blue?logo=x">
+  <a href="https://x.com/invariant0_com">
+    <img alt="Twitter" src="https://img.shields.io/badge/Follow-@invariant0_com-blue?logo=x">
   </a>
 </p>
 
 <p align="center">
-  <img src="images/cardano-ctf.png" alt="Cardano CTF" width="90%">
+  <img src="images/invariant0_logo.jpg" alt="Invariant0" width="55%">
 </p>
 
 ## Tasks
@@ -174,7 +172,7 @@ way. You can run it using the command
 
 [Join our Discord](https://discord.gg/5XVW2MUdWu). You can ask questions, share
 your solutions and discuss anything (not only) security related. Alternatively,
-you can share your thoughts and feedback with us at audit@vacuumlabs.com as
+you can share your thoughts and feedback with us at info@invariant0.com as
 well.
 
 ## Warning & Disclaimer

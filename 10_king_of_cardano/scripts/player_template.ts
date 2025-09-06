@@ -63,7 +63,7 @@ export async function play(
   await awaitTxConfirms(lucid, overthrowTxHash);
 
   // The resulting token name of the King of Cardano NFT will be equal to: "{nick} is King of Cardano"
-  const nick = "Vacuumlabs";
+  const nick = "Invariant0";
 
   // ================ YOUR CODE ENDS HERE
 
