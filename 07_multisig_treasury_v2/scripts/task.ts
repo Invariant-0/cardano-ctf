@@ -151,7 +151,7 @@ export async function test(
     await submitSolutionRecord(lucid, 7n);
 
     const encodedBlogURL =
-      "aHR0cHM6Ly9tZWRpdW0uY29tL0B2YWN1dW1sYWJzX2F1ZGl0aW5nL2NhcmRhbm8tdnVsbmVyYWJpbGl0aWVzLTYtdG9rZW4tc2VjdXJpdHktaWktZjIzMTliMTQ3ZWU2";
+      "aHR0cHM6Ly9tZWRpdW0uY29tL0BpbnZhcmlhbnQwL2NhcmRhbm8tdnVsbmVyYWJpbGl0aWVzLTYtdG9rZW4tc2VjdXJpdHktaWktZjIzMTliMTQ3ZWU2";
 
     passAllTests(
       "\nCongratulations on the successful completion of the Level 07: Multisig Treasury v2\n" +

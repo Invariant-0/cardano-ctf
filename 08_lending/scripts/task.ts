@@ -322,7 +322,7 @@ export async function test(
     await submitSolutionRecord(lucid, 8n);
 
     const encodedBlogURL =
-      "aHR0cHM6Ly9tZWRpdW0uY29tL0B2YWN1dW1sYWJzX2F1ZGl0aW5nL2NhcmRhbm8tY3RmLWhpbnRzLWFuZC1zb2x1dGlvbnMtZTM5OTFjZTZhOTQ0";
+      "aHR0cHM6Ly9tZWRpdW0uY29tL0BpbnZhcmlhbnQwL2NhcmRhbm8tY3RmLWhpbnRzLWFuZC1zb2x1dGlvbnMtZTM5OTFjZTZhOTQ0";
 
     passAllTests(
       "\nCongratulations on the successful completion of the Level 08: Lending\n" +

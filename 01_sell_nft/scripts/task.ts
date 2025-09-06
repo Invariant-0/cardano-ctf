@@ -229,7 +229,7 @@ export async function test(
     await submitSolutionRecord(lucid, 1n);
 
     const encodedBlogURL =
-      "aHR0cHM6Ly9tZWRpdW0uY29tL0B2YWN1dW1sYWJzX2F1ZGl0aW5nL2NhcmRhbm8tdnVsbmVyYWJpbGl0aWVzLTEtZG91YmxlLXNhdGlzZmFjdGlvbi0yMTlmMWJjOTY2NWU=";
+      "aHR0cHM6Ly9tZWRpdW0uY29tL0BpbnZhcmlhbnQwL2NhcmRhbm8tdnVsbmVyYWJpbGl0aWVzLTEtZG91YmxlLXNhdGlzZmFjdGlvbi0yMTlmMWJjOTY2NWU=";
 
     passAllTests(
       "\nCongratulations on the successful completion of the Level 01: Sell NFT\n" +
