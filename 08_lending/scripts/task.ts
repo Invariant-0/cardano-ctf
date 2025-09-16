@@ -49,8 +49,13 @@ export type GameData = {
 export type TestData = void;
 
 function readValidators(lucid: LucidEvolution): Validators {
-  const collateralToken = setupMintingPolicy(lucid, blueprint, 'collateral_token.collateral_token');
-  const lending = setupValidator(lucid, blueprint, 'lending.lending');
+  const collateralToken = setupMintingPolicy(
+    lucid,
+    blueprint,
+    'collateral_token.collateral_token',
+    'PlutusV2'
+  );
+  const lending = setupValidator(lucid, blueprint, 'lending.lending', 'PlutusV2');
 
   return {
     collateralPolicy: collateralToken.policy,

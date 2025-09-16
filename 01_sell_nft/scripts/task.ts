@@ -58,18 +58,18 @@ function readValidators(
   tokenName1: string,
   tokenName2: string
 ): Validators {
-  const lock = setupValidator(lucid, blueprint, 'locked.always_fails');
-  const sell = setupValidator(lucid, blueprint, 'nft_sell.buy');
+  const lock = setupValidator(lucid, blueprint, 'locked.always_fails', 'PlutusV2');
+  const sell = setupValidator(lucid, blueprint, 'nft_sell.buy', 'PlutusV2');
 
   const outRef = new Constr(0, [
     new Constr(0, [outputReference.txHash]),
     BigInt(outputReference.outputIndex),
   ]);
-  const mintNFT1 = setupMintingPolicy(lucid, blueprint, 'nft.unique_nft', [
+  const mintNFT1 = setupMintingPolicy(lucid, blueprint, 'nft.unique_nft', 'PlutusV2', [
     fromText(tokenName1),
     outRef,
   ]);
-  const mintNFT2 = setupMintingPolicy(lucid, blueprint, 'nft.unique_nft', [
+  const mintNFT2 = setupMintingPolicy(lucid, blueprint, 'nft.unique_nft', 'PlutusV2', [
     fromText(tokenName2),
     outRef,
   ]);

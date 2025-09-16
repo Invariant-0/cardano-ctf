@@ -20,6 +20,8 @@
     "task:08": "tsx 08_lending/scripts/run.ts",
     "task:09": "tsx 09_multisig_treasury_v3/scripts/run.ts",
     "task:10": "tsx 10_king_of_cardano/scripts/run.ts",
+    "task:bank00": "tsx bank_00_core_invariant/scripts/run.ts",
+    "task:bank01": "tsx bank_01_deposit_vulnerability/scripts/run.ts",
     "scoreboard": "tsx scoreboard.ts",
     "gen-keys": "tsx common/offchain/generate_private_key.ts"
   },

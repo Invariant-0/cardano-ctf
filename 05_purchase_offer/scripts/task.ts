@@ -71,13 +71,13 @@ function readValidators(
   outputReference: OutRef,
   tokenName: string
 ): Validators {
-  const offer = setupValidator(lucid, blueprint, 'purchase_offer.purchase_offer');
+  const offer = setupValidator(lucid, blueprint, 'purchase_offer.purchase_offer', 'PlutusV2');
 
   const outRef = new Constr(0, [
     new Constr(0, [outputReference.txHash]),
     BigInt(outputReference.outputIndex),
   ]);
-  const mintNFT = setupMintingPolicy(lucid, blueprint, 'nft.unique_nft', [
+  const mintNFT = setupMintingPolicy(lucid, blueprint, 'nft.unique_nft', 'PlutusV2', [
     fromText(tokenName),
     outRef,
   ]);

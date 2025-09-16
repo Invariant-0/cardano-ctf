@@ -42,10 +42,11 @@ function readValidators(lucid: LucidEvolution): Validators {
   const validationToken = setupMintingPolicy(
     lucid,
     blueprint,
-    'validation_token.multisig_validation'
+    'validation_token.multisig_validation',
+    'PlutusV2'
   );
-  const treasury = setupValidator(lucid, blueprint, 'treasury.treasury');
-  const multisig = setupValidator(lucid, blueprint, 'multisig.multisig', [
+  const treasury = setupValidator(lucid, blueprint, 'treasury.treasury', 'PlutusV2');
+  const multisig = setupValidator(lucid, blueprint, 'multisig.multisig', 'PlutusV2', [
     validationToken.policyId,
     treasury.hash,
   ]);

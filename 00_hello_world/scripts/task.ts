@@ -25,7 +25,7 @@ export type GameData = {
 export type TestData = void;
 
 function readValidator(lucid: LucidEvolution): SpendingValidator {
-  const hello = setupValidator(lucid, blueprint, 'hello_world.hello_world');
+  const hello = setupValidator(lucid, blueprint, 'hello_world.hello_world', 'PlutusV2');
   return hello.validator;
 }
 

@@ -17,6 +17,7 @@ import {
   SpendingValidator,
   UTxO,
   Emulator,
+  ScriptType,
 } from '@lucid-evolution/lucid';
 import { validatorToScriptHash, validatorToAddress } from '@lucid-evolution/utils';
 // import { OurEmulator } from './emulator_provider';
@@ -239,6 +240,7 @@ export function setupValidator(
   lucid: LucidEvolution,
   blueprint: BlueprintJSON,
   name: string,
+  plutusVersion: ScriptType = 'PlutusV3',
   parameters?: Data[]
 ): ValidatorData {
   const jsonData = blueprint.validators.find((v) => v.title === name);
@@ -247,7 +249,7 @@ export function setupValidator(
   }
   const compiledCode = jsonData.compiledCode;
   const validator: Script = {
-    type: 'PlutusV2',
+    type: plutusVersion,
     script: parameters === undefined ? compiledCode : applyParamsToScript(compiledCode, parameters),
   };
   const address = validatorToAddress(lucid.config().network!, validator);
@@ -265,6 +267,7 @@ export function setupMintingPolicy(
   lucid: LucidEvolution,
   blueprint: BlueprintJSON,
   name: string,
+  plutusVersion: ScriptType = 'PlutusV3',
   parameters?: Data[]
 ): MintingPolicyData {
   const jsonData = blueprint.validators.find((v) => v.title === name);
@@ -273,7 +276,7 @@ export function setupMintingPolicy(
   }
   const compiledCode = jsonData.compiledCode;
   const policy: MintingPolicy = {
-    type: 'PlutusV2',
+    type: plutusVersion,
     script: parameters === undefined ? compiledCode : applyParamsToScript(compiledCode, parameters),
   };
   const policyId = validatorToScriptHash(policy);

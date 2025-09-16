@@ -41,7 +41,7 @@ export type TestData = {
 };
 
 function readValidators(lucid: LucidEvolution): Validators {
-  const tipJar = setupValidator(lucid, blueprint, 'tipjar.tipjar');
+  const tipJar = setupValidator(lucid, blueprint, 'tipjar.tipjar', 'PlutusV2');
 
   return {
     tipJar: tipJar.validator,

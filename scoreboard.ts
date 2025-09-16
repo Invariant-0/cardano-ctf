@@ -24,7 +24,7 @@ type ParsedDatumType = {
   address: string;
 };
 
-const taskNames = [
+const originalTaskNames = [
   '00_hello_world',
   '01_sell_nft',
   '02_vesting',
@@ -37,6 +37,12 @@ const taskNames = [
   '09_multisig_treasury_v3',
   '10_king_of_cardano',
 ];
+
+const bankTaskNames = ['bank_00_core_invariant', 'bank_01_deposit_vulnerability'];
+
+function taskName(taskId: number) {
+  return taskId > 99 ? bankTaskNames[taskId - 100] : originalTaskNames[taskId];
+}
 
 function showSolvedTasks(parsedDatums: ParsedDatumType[], ownAddress: string) {
   const solvedTasks = parsedDatums
@@ -60,7 +66,7 @@ function showTaskRecords(
 
   console.log(
     chalk.bold(
-      `Task ${chalk.green(taskNames[taskId])} was solved by ${chalk.green(
+      `Task ${chalk.green(taskName(taskId))} was solved by ${chalk.green(
         records.length.toString()
       )} unique addresses`
     )
@@ -118,17 +124,24 @@ const datumsWithParsedAddresses: ParsedDatumType[] = parsedDatums
 
 console.log(chalk.bold(`Your address: ${ownAddress}`));
 console.log('To show the scoreboard for all tasks, input a');
-console.log('To view a complete scoreboard for a single task, input its task number (0..10)');
+console.log(
+  `To view a complete scoreboard for a single task, input its task number (0..${originalTaskNames.length - 1} or 100..${
+    100 + bankTaskNames.length - 1
+  })`
+);
 console.log('To show all tasks that you have solved, input s');
 console.log('To exit, input e');
 
 // eslint-disable-next-line no-constant-condition
 while (true) {
-  const choice = prompt('Please enter your choice:');
+  const choice = prompt('Please enter your choice (or "e" for exit):');
   if (choice === null || choice.trim() === '') {
     console.log('Invalid choice');
   } else if (choice === 'a') {
-    for (let taskId = 0; taskId <= 10; taskId++) {
+    for (let taskId = 0; taskId < originalTaskNames.length; taskId++) {
+      showTaskRecords(datumsWithParsedAddresses, taskId, ownAddress, false);
+    }
+    for (let taskId = 100; taskId < 100 + bankTaskNames.length; taskId++) {
       showTaskRecords(datumsWithParsedAddresses, taskId, ownAddress, false);
     }
   } else if (choice === 'e') {
@@ -137,7 +150,11 @@ while (true) {
     showSolvedTasks(datumsWithParsedAddresses, ownAddress);
   } else {
     const choiceNum = parseInt(choice, 10);
-    if (choiceNum < 0 || choiceNum > 10 || isNaN(choiceNum)) {
+    if (
+      isNaN(choiceNum) ||
+      (!(choiceNum >= 0 && choiceNum < originalTaskNames.length) &&
+        !(choiceNum >= 100 && choiceNum < 100 + bankTaskNames.length))
+    ) {
       console.log('Invalid choice!');
       continue;
     }

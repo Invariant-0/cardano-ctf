@@ -32,7 +32,7 @@ export type GameData = {
 export type TestData = void;
 
 function readValidator(lucid: LucidEvolution): SpendingValidator {
-  const vesting = setupValidator(lucid, blueprint, 'vesting.vesting');
+  const vesting = setupValidator(lucid, blueprint, 'vesting.vesting', 'PlutusV2');
 
   return vesting.validator;
 }

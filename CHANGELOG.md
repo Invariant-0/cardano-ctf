@@ -1,3 +1,14 @@
+## Version 2.1.0 - [2025-09-17]
+
+### Added
+
+- **Two tasks** for the easier bank CTF series: [core_invariant](./bank_00_core_invariant/) and
+  [deposit_vulnerability](./bank_01_deposit_vulnerability/).
+
+### Changed
+
+- Scoreboard can now display both the original series and the bank series.
+
 ## Version 2.0.0 - [2025-09-13]
 
 ### Changed

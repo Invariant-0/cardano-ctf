@@ -69,16 +69,18 @@ function readValidators(
     new Constr(0, [bootstrapUTxO.txHash]),
     BigInt(bootstrapUTxO.outputIndex),
   ]);
-  const uniqueNFT = setupMintingPolicy(lucid, blueprint, 'unique_nft.unique_nft', [
+  const uniqueNFT = setupMintingPolicy(lucid, blueprint, 'unique_nft.unique_nft', 'PlutusV2', [
     fromText(uniqueNFTAssetName),
     bootstrapUTxORefParameter,
   ]);
-  const kingOfCardano = setupValidator(lucid, blueprint, 'king_of_cardano.king_of_cardano', [
-    adminPubKeyHash,
-    uniqueNFT.policyId,
-    fromText(uniqueNFTAssetName),
-  ]);
-  const kingNFT = setupMintingPolicy(lucid, blueprint, 'king_nft.king_nft', [
+  const kingOfCardano = setupValidator(
+    lucid,
+    blueprint,
+    'king_of_cardano.king_of_cardano',
+    'PlutusV2',
+    [adminPubKeyHash, uniqueNFT.policyId, fromText(uniqueNFTAssetName)]
+  );
+  const kingNFT = setupMintingPolicy(lucid, blueprint, 'king_nft.king_nft', 'PlutusV2', [
     kingOfCardano.hash,
     uniqueNFT.policyId,
     fromText(uniqueNFTAssetName),

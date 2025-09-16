@@ -38,8 +38,10 @@ export type GameData = {
 export type TestData = void;
 
 function readValidators(lucid: LucidEvolution): Validators {
-  const multisig = setupValidator(lucid, blueprint, 'multisig.multisig');
-  const treasury = setupValidator(lucid, blueprint, 'treasury.treasury', [multisig.hash]);
+  const multisig = setupValidator(lucid, blueprint, 'multisig.multisig', 'PlutusV2');
+  const treasury = setupValidator(lucid, blueprint, 'treasury.treasury', 'PlutusV2', [
+    multisig.hash,
+  ]);
 
   return {
     treasuryValidator: treasury.validator,

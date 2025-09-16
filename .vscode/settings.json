@@ -20,6 +20,9 @@
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[aiken]": {
+    "editor.defaultFormatter": "txpipe.aiken"
+  },
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -28,7 +31,5 @@
   ],
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "files.associations": {
-    "*.ak": "rust"
-  }
+  "prettier.ignorePath": "**/*.ak"
 }

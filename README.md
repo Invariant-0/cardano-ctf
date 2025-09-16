@@ -28,6 +28,8 @@ smart contracts.
 
 ## Tasks
 
+### Original Challenges
+
 0. [hello_world](./00_hello_world/) — A sanity check to verify that everything's setup correctly.
 1. [sell_nft](./01_sell_nft/) — Try to buy two NFTs by paying less than their stated prices!
 2. [vesting](./02_vesting/) — Try to skip the vesting period.
@@ -44,13 +46,26 @@ smart contracts.
 10. [king_of_cardano](./10_king_of_cardano/) — Become the King of Cardano and prevent others from
     overthrowing you.
 
+### Bank Series (New!)
+
+These should be easier and they build on each other; please solve them in order. They are unrelated
+to the original series.
+
+1. [bank_00_core_invariant](./bank_00_core_invariant/) — Find an overlooked core rule and empty the
+   bank.
+2. [bank_01_deposit_vulnerability](./bank_01_deposit_vulnerability/) — Exploit a flaw in the deposit
+   mechanism to steal funds from an account.
+
+More bank challenges coming soon!
+
 ## How it works
 
 Each task has its own folder. It consists of three main parts:
 
 - The validators written in [Aiken](https://aiken-lang.org/). They are located in the `validators`
   folder. You can compile them by running `aiken build` in the root directory of the task. Make sure
-  that you use (old) Aiken version `v1.0.26-alpha`.
+  that you use (old) Aiken version `v1.0.26-alpha` for the original series. New bank series uses new
+  Aiken versions.
 - The off-chain code. We use the
   [Lucid Evolution](https://github.com/Anastasia-Labs/lucid-evolution) library and
   [Blockfrost](https://blockfrost.io/) API to interact with the Preview testnet. The off-chain
@@ -150,10 +165,11 @@ we try to replicate it on the testnet as well.
 
 ### Aiken compilation issues
 
-We use old Aiken version `v1.0.26-alpha` and `aiken-stdlib` version `1.6.0` (you can see this in
-`aiken.toml` files). As Aiken syntax changed and newer Aiken versions are
+For the original series, we use old Aiken version `v1.0.26-alpha` and `aiken-stdlib` version `1.6.0`
+(you can see this in `aiken.toml` files). As Aiken syntax changed and newer Aiken versions are
 [unable](https://github.com/aiken-lang/stdlib/blob/main/README.md#compatibility) to compile this,
-you need to downgrade Aiken.
+you need to downgrade Aiken to build those validators. The bank series use new Aiken and stdlib
+versions.
 
 ## Scoreboard
 
