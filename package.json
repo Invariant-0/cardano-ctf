@@ -22,6 +22,8 @@
     "task:10": "tsx 10_king_of_cardano/scripts/run.ts",
     "task:bank00": "tsx bank_00_core_invariant/scripts/run.ts",
     "task:bank01": "tsx bank_01_deposit_vulnerability/scripts/run.ts",
+    "task:bank02": "tsx bank_02_mutual_exclusion/scripts/run.ts",
+    "task:bank03": "tsx bank_03_increase_balance/scripts/run.ts",
     "scoreboard": "tsx scoreboard.ts",
     "gen-keys": "tsx common/offchain/generate_private_key.ts"
   },

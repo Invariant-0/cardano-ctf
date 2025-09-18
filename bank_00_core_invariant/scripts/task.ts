@@ -1,6 +1,5 @@
 import { Data, LucidEvolution, SpendingValidator, UTxO } from '@lucid-evolution/lucid';
 import {
-  applyParamsToScript,
   validatorToAddress,
   validatorToScriptHash,
   generatePrivateKey,
@@ -8,7 +7,6 @@ import {
 import {
   awaitTxConfirms,
   filterUTXOsByTxHash,
-  getFormattedTxDetails,
   getWalletBalanceLovelace,
   resetWallet,
   setupValidator,

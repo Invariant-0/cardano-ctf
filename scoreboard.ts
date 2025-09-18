@@ -38,7 +38,12 @@ const originalTaskNames = [
   '10_king_of_cardano',
 ];
 
-const bankTaskNames = ['bank_00_core_invariant', 'bank_01_deposit_vulnerability'];
+const bankTaskNames = [
+  'bank_00_core_invariant',
+  'bank_01_deposit_vulnerability',
+  'bank_02_mutual_exclusion',
+  'bank_03_increase_balance',
+];
 
 function taskName(taskId: number) {
   return taskId > 99 ? bankTaskNames[taskId - 100] : originalTaskNames[taskId];

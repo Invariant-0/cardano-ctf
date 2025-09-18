@@ -7,16 +7,16 @@ for i in $(seq -w 0 10); do
   task_num=$(printf "%02d" $i)
   echo "Running original series task $task_num ..."
   yarn task:$task_num
-  echo "Completed task $task_num."
+  echo "Completed task $task_num"
   echo ""
 done
 
 # Loop from 0 to 1
-for i in $(seq -w 0 1); do
+for i in $(seq -w 0 3); do
   task_num=$(printf "%02d" $i)
-  echo "Running bank series task $task_num..."
+  echo "Running bank series task $task_num ..."
   yarn task:bank$task_num
-  echo "Completed task $task_num."
+  echo "Completed task $task_num"
   echo ""
 done
 

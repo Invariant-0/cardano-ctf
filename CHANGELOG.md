@@ -1,3 +1,10 @@
+## Version 2.2.0 - [2025-09-20]
+
+### Added
+
+- **Two tasks** for the easier bank CTF series: [mutual_exclusion](./bank_02_mutual_exclusion/) and
+  [increase_balance](./bank_03_increase_balance/).
+
 ## Version 2.1.0 - [2025-09-17]
 
 ### Added

@@ -51,10 +51,14 @@ smart contracts.
 These should be easier and they build on each other; please solve them in order. They are unrelated
 to the original series.
 
-1. [bank_00_core_invariant](./bank_00_core_invariant/) — Find an overlooked core rule and empty the
+0. [bank_00_core_invariant](./bank_00_core_invariant/) — Find an overlooked core rule and empty the
    bank.
-2. [bank_01_deposit_vulnerability](./bank_01_deposit_vulnerability/) — Exploit a flaw in the deposit
+1. [bank_01_deposit_vulnerability](./bank_01_deposit_vulnerability/) — Exploit a flaw in the deposit
    mechanism to steal funds from an account.
+2. [bank_02_mutual_exclusion](./bank_02_mutual_exclusion/) — Withdraw from a different account by
+   recognizing which transaction fields you can manipulate to your advantage.
+3. [bank_03_increase_balance](./bank_03_increase_balance/) — Empty the bank by increasing your
+   balance to the clouds.
 
 More bank challenges coming soon!
 
