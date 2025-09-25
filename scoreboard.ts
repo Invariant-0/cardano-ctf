@@ -43,6 +43,7 @@ const bankTaskNames = [
   'bank_01_deposit_vulnerability',
   'bank_02_mutual_exclusion',
   'bank_03_increase_balance',
+  'bank_04_lifecycle',
 ];
 
 function taskName(taskId: number) {

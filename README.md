@@ -59,6 +59,8 @@ to the original series.
    recognizing which transaction fields you can manipulate to your advantage.
 3. [bank_03_increase_balance](./bank_03_increase_balance/) — Empty the bank by increasing your
    balance to the clouds.
+4. [bank_04_lifecycle](./bank_04_lifecycle/) — Focus on every step of a UTxO lifecycle to empty the
+   bank again.
 
 More bank challenges coming soon!
 
