@@ -264,7 +264,7 @@ type MintingPolicyData = {
 };
 
 export function setupMintingPolicy(
-  lucid: LucidEvolution,
+  _lucid: LucidEvolution,
   blueprint: BlueprintJSON,
   name: string,
   plutusVersion: ScriptType = 'PlutusV3',
