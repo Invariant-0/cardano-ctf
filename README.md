@@ -61,7 +61,7 @@ to the original series.
    balance to the clouds.
 4. [bank_04_lifecycle](./bank_04_lifecycle/) — Focus on every step of a UTxO lifecycle to empty the
    bank again.
-5. [bank_05_misconfiguration](./bank_05_misconfiguration/) — Config UTxO is a central component,
+5. [bank_05_misconfiguration](./bank_05_misconfiguration/) — Config UTxO is a central component;
    misconfigure and profit.
 
 More bank challenges coming soon!

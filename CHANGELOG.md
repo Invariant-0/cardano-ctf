@@ -1,3 +1,10 @@
+## Version 2.3.0 - [2025-09-29]
+
+### Added
+
+- **Two tasks** for the easier bank CTF series: [lifecycle](./bank_04_lifecycle/) and
+  [misconfiguration](./bank_05_misconfiguration/).
+
 ## Version 2.2.0 - [2025-09-20]
 
 ### Added

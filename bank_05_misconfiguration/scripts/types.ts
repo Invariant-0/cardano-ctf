@@ -36,10 +36,5 @@ export function createAccountDatum(balance: bigint, ownerPkh: string): string {
   return Data.to(datum, AccountDatum);
 }
 
-// Helper function to parse account datum from CBOR
-export function parseAccountDatum(datumCbor: string): AccountDatum {
-  return Data.from(datumCbor, AccountDatum);
-}
-
 // Account token name constant (matching Aiken validator)
 export const ACCOUNT_TOKEN_NAME = '41'; // Hex for 'A'

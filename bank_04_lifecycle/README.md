@@ -26,8 +26,7 @@ to address the security vulnerabilities:
 
 The bank's validation logic is now more robust, with decent separation of concerns between the
 validators. However, when designing secure systems, it's crucial to consider the entire lifecycle of
-every componentl; every state transition must be properly validated for the system to be
-bulletproof.
+every component; every state transition must be properly validated for the system to be bulletproof.
 
 ## Your Goal
 
