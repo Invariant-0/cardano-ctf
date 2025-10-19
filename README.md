@@ -23,7 +23,7 @@ smart contracts.
 </p>
 
 <p align="center">
-  <img src="images/invariant0_logo.jpg" alt="Invariant0" width="55%">
+  <img src="images/gamifying cardano security i0.png" alt="Invariant0" width="55%">
 </p>
 
 ## Tasks
