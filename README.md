@@ -63,6 +63,7 @@ to the original series.
    bank again.
 5. [bank_05_misconfiguration](./bank_05_misconfiguration/) — Config UTxO is a central component;
    misconfigure and profit.
+6. [bank_06_free_mint](./bank_06_free_mint/) — Mint more of a token and use it to drain the bank.
 
 More bank challenges coming soon!
 

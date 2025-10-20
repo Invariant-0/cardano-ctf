@@ -45,6 +45,7 @@ const bankTaskNames = [
   'bank_03_increase_balance',
   'bank_04_lifecycle',
   'bank_05_misconfiguration',
+  'bank_06_free_mint',
 ];
 
 function taskName(taskId: number) {
