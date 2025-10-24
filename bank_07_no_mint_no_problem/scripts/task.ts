@@ -41,15 +41,13 @@ export type GameData = {
   configAddress: string;
   accountAsset: string;
   configAsset: string;
-  playerAccountUtxo: UTxO;
-  victim1AccountUtxo: UTxO;
-  victim2AccountUtxo: UTxO;
+  victimAccountUtxo: UTxO;
   bankUtxo: UTxO;
   configUtxo: UTxO;
   playerAddress: string;
   playerPkh: string;
-  victim1Address: string;
-  victim2Address: string;
+  victimAddress: string;
+  victimPkh: string;
   originalBalance: bigint;
 };
 export type TestData = { lastBankTxHash: string };
@@ -128,40 +126,23 @@ export async function setup(lucid: LucidEvolution) {
   const playerAddress = await lucid.wallet().address();
   const playerPkh = getAddressDetails(playerAddress).paymentCredential!.hash;
 
-  // Create two victim wallets
-  const victim1PrivateKey = generatePrivateKey();
-  lucid.selectWallet.fromPrivateKey(victim1PrivateKey);
-  const victim1Address = await lucid.wallet().address();
-  const victim1Pkh = getAddressDetails(victim1Address).paymentCredential!.hash;
-
-  const victim2PrivateKey = generatePrivateKey();
-  lucid.selectWallet.fromPrivateKey(victim2PrivateKey);
-  const victim2Address = await lucid.wallet().address();
-  const victim2Pkh = getAddressDetails(victim2Address).paymentCredential!.hash;
+  // Create one victim wallet
+  const victimPrivateKey = generatePrivateKey();
+  lucid.selectWallet.fromPrivateKey(victimPrivateKey);
+  const victimAddress = await lucid.wallet().address();
+  const victimPkh = getAddressDetails(victimAddress).paymentCredential!.hash;
 
   resetWallet(lucid);
 
-  console.log(`Creating bank and three accounts (yours + two victims)...`);
+  console.log(`Creating bank and the victim's account...`);
 
   // Initial deposits
-  const victim1DepositAmount = 30_000_000n; // 30 ADA
-  const victim2DepositAmount = 40_000_000n; // 40 ADA
-  const totalBankFunds = victim1DepositAmount + victim2DepositAmount;
+  const victimDepositAmount = 70_000_000n; // 70 ADA
 
-  // Create account datums
-  const playerAccountDatum = {
-    balance: 0n, // Player starts with no balance
-    owner: playerPkh,
-  };
-
-  const victim1AccountDatum = {
-    balance: victim1DepositAmount,
-    owner: victim1Pkh,
-  };
-
-  const victim2AccountDatum = {
-    balance: victim2DepositAmount,
-    owner: victim2Pkh,
+  // Create victim's account datum
+  const victimAccountDatum = {
+    balance: victimDepositAmount,
+    owner: victimPkh,
   };
 
   // Create config datum
@@ -196,80 +177,55 @@ export async function setup(lucid: LucidEvolution) {
   const initialBankUtxo = filterUTXOsByTxHash(await lucid.utxosAt(bankAddress), setupTxHash)[0];
   const configUtxo = filterUTXOsByTxHash(await lucid.utxosAt(configAddress), setupTxHash)[0];
 
-  // Local function to setup a single account
-  async function setupAccount(
-    accountDatum: typeof playerAccountDatum,
-    currentBankUtxo: UTxO
-  ): Promise<{ bankUtxo: UTxO; accountUtxo: UTxO }> {
-    console.log('Setting up an account...');
+  // Second transaction: Create victim's account with minted account token
+  console.log('Setting up the victim account...');
 
-    // Calculate new bank balance (add the account's deposit if any)
-    const newBankBalance = currentBankUtxo.assets.lovelace + accountDatum.balance;
+  const newBankBalance = initialBankUtxo.assets.lovelace + victimDepositAmount;
 
-    const tx = await lucid
-      .newTx()
-      // Spend the bank UTxO to satisfy account minting policy
-      .collectFrom([currentBankUtxo], Data.void())
-      .attach.SpendingValidator(bankValidator)
-      // Reference the config
-      .readFrom([configUtxo])
-      // Mint single account validity token
-      .mintAssets({ [accountAsset]: 1n }, Data.void())
-      .attach.MintingPolicy(accountMintingPolicy)
-      // Recreate the bank UTxO with updated funds
-      .pay.ToContract(
-        bankAddress,
-        { kind: 'inline', value: Data.void() },
-        { lovelace: newBankBalance }
-      )
-      // Create the account with validity token
-      .pay.ToContract(
-        accountAddress,
-        { kind: 'inline', value: Data.to(accountDatum, AccountDatum) },
-        { lovelace: 2_000_000n, [accountAsset]: 1n } // Min Ada + validity token
-      )
-      .complete();
+  const accountTx = await lucid
+    .newTx()
+    // Spend the bank UTxO to satisfy account minting policy
+    .collectFrom([initialBankUtxo], Data.void())
+    .attach.SpendingValidator(bankValidator)
+    // Reference the config
+    .readFrom([configUtxo])
+    // Mint single account validity token
+    .mintAssets({ [accountAsset]: 1n }, Data.void())
+    .attach.MintingPolicy(accountMintingPolicy)
+    // Recreate the bank UTxO with updated funds
+    .pay.ToContract(
+      bankAddress,
+      { kind: 'inline', value: Data.void() },
+      { lovelace: newBankBalance }
+    )
+    // Create the victim's account with validity token
+    .pay.ToContract(
+      accountAddress,
+      { kind: 'inline', value: Data.to(victimAccountDatum, AccountDatum) },
+      { lovelace: 2_000_000n, [accountAsset]: 1n } // Min Ada + validity token
+    )
+    .complete();
 
-    const signedTx = await tx.sign.withWallet().complete();
-    const txHash = await signedTx.submit();
-    await awaitTxConfirms(lucid, txHash);
+  const accountSignedTx = await accountTx.sign.withWallet().complete();
+  const accountTxHash = await accountSignedTx.submit();
+  await awaitTxConfirms(lucid, accountTxHash);
 
-    // Get the created UTxOs
-    const newBankUtxo = filterUTXOsByTxHash(await lucid.utxosAt(bankAddress), txHash)[0];
-    const newAccountUtxo = filterUTXOsByTxHash(await lucid.utxosAt(accountAddress), txHash)[0];
+  // Get the created UTxOs
+  const bankUtxo = filterUTXOsByTxHash(await lucid.utxosAt(bankAddress), accountTxHash)[0];
+  const victimAccountUtxo = filterUTXOsByTxHash(
+    await lucid.utxosAt(accountAddress),
+    accountTxHash
+  )[0];
 
-    return {
-      bankUtxo: newBankUtxo,
-      accountUtxo: newAccountUtxo,
-    };
-  }
-
-  // Create player account (no deposit)
-  const playerAccountResult = await setupAccount(playerAccountDatum, initialBankUtxo);
-
-  // Create victim1 account (with deposit)
-  const victim1AccountResult = await setupAccount(
-    victim1AccountDatum,
-    playerAccountResult.bankUtxo
-  );
-
-  // Create victim2 account (with deposit)
-  const victim2AccountResult = await setupAccount(
-    victim2AccountDatum,
-    victim1AccountResult.bankUtxo
-  );
-
-  const bankUtxo = victim2AccountResult.bankUtxo;
-
-  console.log(`Bank initialized with ${totalBankFunds / 1_000_000n} ADA total deposits`);
+  console.log(`Bank initialized with victim's ${victimDepositAmount / 1_000_000n} ADA deposit`);
 
   console.log(`\n=== SETUP WAS SUCCESSFUL ===\n`);
-  console.log(`You (player) have a bank account with 0 ADA balance.`);
+  console.log(`You (player) have NO bank account.`);
   console.log(
-    `Two other users have accounts with ${victim1DepositAmount / 1_000_000n} ADA and ${victim2DepositAmount / 1_000_000n} ADA deposited.`
+    `Another user has an account with ${victimDepositAmount / 1_000_000n} ADA deposited.`
   );
   console.log(
-    `Can you find a way to mint more of some tokens and use them to artificially increase your balance and eventually drain the entire bank?\n`
+    `It is hard to mint more account tokens now; can you still manage to get the token somehow? Once you do, you can drain the bank again.\n`
   );
 
   return {
@@ -283,15 +239,13 @@ export async function setup(lucid: LucidEvolution) {
     configAddress,
     accountAsset,
     configAsset,
-    playerAccountUtxo: playerAccountResult.accountUtxo,
-    victim1AccountUtxo: victim1AccountResult.accountUtxo,
-    victim2AccountUtxo: victim2AccountResult.accountUtxo,
+    victimAccountUtxo,
     bankUtxo,
     configUtxo,
     playerAddress,
     playerPkh,
-    victim1Address,
-    victim2Address,
+    victimAddress,
+    victimPkh,
     originalBalance: await getWalletBalanceLovelace(lucid),
   };
 }
@@ -308,8 +262,8 @@ export async function test(
   const endBalance = await getWalletBalanceLovelace(lucid);
   const gained = endBalance - gameData.originalBalance;
 
-  // Player should have gained significant funds (at least 66 ADA from the 70 ADA total deposits)
-  if (gained < 65_000_000n) {
+  // Player should have gained significant funds (at least 66 ADA from the 70 ADA victim deposit)
+  if (gained < 66_000_000n) {
     failTest('TEST 1 FAILED -- you did not successfully drain enough from the bank');
     passed = false;
   } else {
@@ -332,12 +286,12 @@ export async function test(
   }
 
   if (passed) {
-    await submitSolutionRecord(lucid, 106n); // bank_06 level
+    await submitSolutionRecord(lucid, 107n); // bank_07 level
 
     passAllTests(
-      '\nCongratulations on completing Bank 06: Free Mint!\n' +
-        'You successfully exploited loose token minting checks to artificially increase your balance!\n' +
-        'This demonstrates how important strict token lifecycle control is for the whole protocol security.',
+      '\nCongratulations on completing Bank 07: No Mint, No Problem!\n' +
+        'You successfully showcased that adding tokens to a protocol can prove very tricky to do right and that they need to be accounted for at all times.\n' +
+        'Good luck with fixing the validators!',
       lucid
     );
 

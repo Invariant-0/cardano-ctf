@@ -1,0 +1,18 @@
+name = "ctf/bank_07_no_mint_no_problem"
+version = "0.0.0"
+compiler = "v1.1.19"
+plutus = "v3"
+license = "GPL-3.0"
+description = "Aiken contracts for project 'ctf/bank_07_no_mint_no_problem'"
+
+[repository]
+user = "invariant-0"
+project = "bank_07_no_mint_no_problem"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "v2.1.0"
+source = "github"
+
+[config]

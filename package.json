@@ -27,6 +27,7 @@
     "task:bank04": "tsx bank_04_lifecycle/scripts/run.ts",
     "task:bank05": "tsx bank_05_misconfiguration/scripts/run.ts",
     "task:bank06": "tsx bank_06_free_mint/scripts/run.ts",
+    "task:bank07": "tsx bank_07_no_mint_no_problem/scripts/run.ts",
     "scoreboard": "tsx scoreboard.ts",
     "gen-keys": "tsx common/offchain/generate_private_key.ts"
   },

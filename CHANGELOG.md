@@ -1,3 +1,10 @@
+## Version 2.4.0 - [2025-10-24]
+
+### Added
+
+- **Two tasks** for the easier bank CTF series: [free_mint](./bank_06_free_mint/) and
+  [no_mint_no_problem](./bank_07_no_mint_no_problem/).
+
 ## Version 2.3.0 - [2025-09-29]
 
 ### Added
