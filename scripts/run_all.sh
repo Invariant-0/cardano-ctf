@@ -12,7 +12,7 @@ for i in $(seq -w 0 10); do
 done
 
 # Loop from 0 to 1
-for i in $(seq -w 0 7); do
+for i in $(seq -w 0 8); do
   task_num=$(printf "%02d" $i)
   echo "Running bank series task $task_num ..."
   yarn task:bank$task_num

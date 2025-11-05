@@ -66,6 +66,8 @@ to the original series.
 6. [bank_06_free_mint](./bank_06_free_mint/) — Mint more of a token and use it to drain the bank.
 7. [bank_07_no_mint_no_problem](./bank_07_no_mint_no_problem/) — Not possible to mint it anymore?
    Get the token anyway.
+8. [bank_08_self_collision](./bank_08_self_collision/) - Another, a bit more obscure way to get the
+   token.
 
 More bank challenges coming soon!
 

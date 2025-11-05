@@ -47,6 +47,7 @@ const bankTaskNames = [
   'bank_05_misconfiguration',
   'bank_06_free_mint',
   'bank_07_no_mint_no_problem',
+  'bank_08_self_collision',
 ];
 
 function taskName(taskId: number) {

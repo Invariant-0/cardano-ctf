@@ -73,6 +73,12 @@ validator bank(config_policy_id: PolicyId) {
               account_script_credential,
               account_token_name,
             ) > 0,
+            // the output has the token
+            quantity_of(
+              account_output.value,
+              account_script_credential,
+              account_token_name,
+            ) > 0,
             // if there is an account input, the balance has to be updated, but can go both ways (deposit or withdraw)
             account_output_datum.balance == account_input_datum.balance + fund_difference,
           }
