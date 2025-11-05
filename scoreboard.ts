@@ -48,6 +48,7 @@ const bankTaskNames = [
   'bank_06_free_mint',
   'bank_07_no_mint_no_problem',
   'bank_08_self_collision',
+  'bank_09_twin_bank',
 ];
 
 function taskName(taskId: number) {

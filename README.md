@@ -68,6 +68,8 @@ to the original series.
    Get the token anyway.
 8. [bank_08_self_collision](./bank_08_self_collision/) - Another, a bit more obscure way to get the
    token.
+9. [bank_09_twin_bank](./bank_09_twin_bank/) - What happens if there is more than a single bank
+   UTxO?
 
 More bank challenges coming soon!
 
