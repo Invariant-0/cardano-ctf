@@ -70,6 +70,8 @@ to the original series.
    token.
 9. [bank_09_twin_bank](./bank_09_twin_bank/) - What happens if there is more than a single bank
    UTxO?
+10. [bank_10_transfer](./bank_10_transfer/) - Account transfers are live again, but refactoring can
+    sometimes reintroduce old bugs..
 
 More bank challenges coming soon!
 

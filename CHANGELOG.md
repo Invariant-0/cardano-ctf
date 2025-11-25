@@ -1,3 +1,10 @@
+## Version 2.5.0 - [2025-11-28]
+
+### Added
+
+- **Three tasks** for the easier bank CTF series: [self_collision](./bank_08_self_collision/),
+  [twin_bank](./bank_09_twin_bank/) and [transfer](./bank_10_transfer/).
+
 ## Version 2.4.0 - [2025-10-24]
 
 ### Added

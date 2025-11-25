@@ -30,6 +30,7 @@
     "task:bank07": "tsx bank_07_no_mint_no_problem/scripts/run.ts",
     "task:bank08": "tsx bank_08_self_collision/scripts/run.ts",
     "task:bank09": "tsx bank_09_twin_bank/scripts/run.ts",
+    "task:bank10": "tsx bank_10_transfer/scripts/run.ts",
     "scoreboard": "tsx scoreboard.ts",
     "gen-keys": "tsx common/offchain/generate_private_key.ts"
   },
