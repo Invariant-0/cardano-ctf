@@ -72,6 +72,8 @@ to the original series.
    UTxO?
 10. [bank_10_transfer](./bank_10_transfer/) - Account transfers are live again, but refactoring can
     sometimes reintroduce old bugs..
+11. [bank_11_cheques](./bank_11_cheques/) - Off-chain cheques let you authorize withdrawals, but
+    somehow the mere addition of this feature broke it all.
 
 More bank challenges coming soon!
 
