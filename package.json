@@ -33,6 +33,7 @@
     "task:bank10": "tsx bank_10_transfer/scripts/run.ts",
     "task:bank11": "tsx bank_11_cheques/scripts/run.ts",
     "task:bank12": "tsx bank_12_free_pass/scripts/run.ts",
+    "task:bank13": "tsx bank_13_almost_there/scripts/run.ts",
     "scoreboard": "tsx scoreboard.ts",
     "gen-keys": "tsx common/offchain/generate_private_key.ts"
   },

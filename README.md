@@ -76,8 +76,8 @@ to the original series.
     somehow the mere addition of this feature broke it all.
 12. [bank_12_free_pass](./bank_12_free_pass/) - The cheque verification is fixed, but sharing a
     cheque is still equivalent to giving someone a free pass to the account.
-
-More bank challenges coming soon!
+13. [bank_13_almost_there](./bank_13_almost_there/) - Cheques get more complex, but is the
+    vulnerability from previous level fixed yet?
 
 ## How it works
 

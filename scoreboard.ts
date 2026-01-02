@@ -52,6 +52,7 @@ const bankTaskNames = [
   'bank_10_transfer',
   'bank_11_cheques',
   'bank_12_free_pass',
+  'bank_13_almost_there',
 ];
 
 function taskName(taskId: number) {
@@ -148,7 +149,7 @@ console.log('To exit, input e');
 
 // eslint-disable-next-line no-constant-condition
 while (true) {
-  const choice = prompt('Please enter your choice (or "e" for exit):');
+  const choice = prompt('Please enter your choice (or "e" for exit): ');
   if (choice === null || choice.trim() === '') {
     console.log('Invalid choice');
   } else if (choice === 'a') {
