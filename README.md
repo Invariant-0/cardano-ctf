@@ -74,6 +74,8 @@ to the original series.
     sometimes reintroduce old bugs..
 11. [bank_11_cheques](./bank_11_cheques/) - Off-chain cheques let you authorize withdrawals, but
     somehow the mere addition of this feature broke it all.
+12. [bank_12_free_pass](./bank_12_free_pass/) - The cheque verification is fixed, but sharing a
+    cheque is still equivalent to giving someone a free pass to the account.
 
 More bank challenges coming soon!
 
