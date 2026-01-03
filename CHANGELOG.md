@@ -1,3 +1,10 @@
+## Version 2.6.0 - [2026-01-03]
+
+### Added
+
+- **Three tasks** for the easier bank CTF series: [cheques](./bank_11_cheques/),
+  [free_pass](./bank_12_free_pass/) and [almost_there](./bank_13_almost_there/).
+
 ## Version 2.5.0 - [2025-11-28]
 
 ### Added
