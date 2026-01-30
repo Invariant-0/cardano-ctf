@@ -1,3 +1,9 @@
+## Version 3.0.0 - [2026-01-31] - tag #ctf-2.0
+
+### Added
+
+- Banking series project closeout report and link to the closeout video on Youtube.
+
 ## Version 2.6.0 - [2026-01-03]
 
 ### Added
