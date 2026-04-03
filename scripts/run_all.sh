@@ -3,7 +3,7 @@
 # ⚠️ The script assumes it is run from the project root path!
 
 # Loop from 0 to 10
-for i in $(seq -w 0 10); do
+for i in $(seq 0 10); do
   task_num=$(printf "%02d" $i)
   echo "Running original series task $task_num ..."
   yarn task:$task_num
@@ -12,7 +12,7 @@ for i in $(seq -w 0 10); do
 done
 
 # Loop from 0 to 1
-for i in $(seq -w 0 13); do
+for i in $(seq 0 13); do
   task_num=$(printf "%02d" $i)
   echo "Running bank series task $task_num ..."
   yarn task:bank$task_num
