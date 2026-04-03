@@ -51,13 +51,13 @@
   },
   "resolutions": {
     "lodash": "4.18.1",
-    "minimatch": "9.0.6",
+    "minimatch": "9.0.7",
     "eslint/**/minimatch": "3.1.5",
     "rimraf/**/minimatch": "3.1.5",
     "node-gyp/**/minimatch": "3.1.5",
     "@eslint/eslintrc/**/minimatch": "3.1.5",
     "@humanwhocodes/config-array/**/minimatch": "3.1.5",
-    "brace-expansion": "2.0.2",
+    "brace-expansion": "2.0.3",
     "eslint/**/brace-expansion": "1.1.13",
     "tar": "7.5.13",
     "@tootallnate/once": "3.0.1"
